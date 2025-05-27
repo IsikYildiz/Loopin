@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Loopin</string>
+    <string name="title_home">Home</string>
+    <string name="title_calendar">Calendar</string>
+    <string name="title_events">Events</string>
+    <string name="title_chats">Chats</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button_text">Login</string>
+    <string name="signup_button_text">Sign Up</string>
+</resources>
