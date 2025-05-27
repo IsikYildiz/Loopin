@@ -9,12 +9,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.loopin.databinding.FragmentCalendarBinding
 
+//Takvim göstermek için kullanılır.
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(

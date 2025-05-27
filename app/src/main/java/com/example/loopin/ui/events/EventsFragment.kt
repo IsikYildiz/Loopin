@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.loopin.databinding.FragmentEventsBinding
 
+/*Kullanıcının katıldığı, katılacağı etkinlikleri görüntülemek için kullanılır.
+Aynı zamanda kullanıcı buradan etkinlik oluşturabilir.*/
 class EventsFragment : Fragment() {
 
     private var _binding: FragmentEventsBinding? = null

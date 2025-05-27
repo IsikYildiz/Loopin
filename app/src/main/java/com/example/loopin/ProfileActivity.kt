@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.loopin.databinding.ActivityProfileBinding
 
+//Kullanıcıların profilini görüntülemek için kullanılır.
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding

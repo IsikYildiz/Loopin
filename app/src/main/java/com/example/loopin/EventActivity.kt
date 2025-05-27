@@ -2,18 +2,17 @@ package com.example.loopin
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.loopin.databinding.ActivitySignupBinding
+import com.example.loopin.databinding.ActivityEventBinding
 
-//Kullanıcı kayıt işlemi için kullanılır.
-class SignupActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivitySignupBinding
+//Tek bir etkinlik göstermek için kullanılır.
+class EventActivity : AppCompatActivity(){
+    private lateinit var binding: ActivityEventBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
 
-        binding = ActivitySignupBinding.inflate(layoutInflater)
+        binding = ActivityEventBinding.inflate(layoutInflater)
         setContentView(binding.root)
     }
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/custom_toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?attr/actionBarSize"
+    android:background="?attr/colorPrimary"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+
+        <!-- Arama Çubuğu -->
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/search_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:queryHint="Ara..." />
+
+        <!-- Düğme 1 -->
+        <ImageButton
+            android:id="@+id/buttonNotifications"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Bildirimler"
+            android:scaleType="centerInside"
+            android:src="@drawable/notification_icon" />
+
+        <!-- Düğme 2 -->
+        <ImageButton
+            android:id="@+id/buttonProfile"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Profil"
+            android:scaleType="centerInside"
+            android:src="@drawable/profile_icon" />
+    </LinearLayout>
+
+</androidx.appcompat.widget.Toolbar>
