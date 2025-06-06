@@ -1,4 +1,4 @@
-package com.example.loopin
+package com.example.loopin.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,7 +14,6 @@ import com.example.loopin.databinding.ActivitySignupBinding
 import kotlinx.coroutines.launch
 import java.io.IOException
 import com.example.loopin.models.RegisterRequest
-import com.example.loopin.models.RegisterResponse
 import com.example.loopin.models.CheckUsernameRequest
 import com.example.loopin.models.CheckEmailRequest
 import com.example.loopin.network.ApiClient

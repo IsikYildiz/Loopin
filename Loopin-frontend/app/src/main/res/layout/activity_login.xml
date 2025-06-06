@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_background"
     android:padding="16dp"
-    tools:context=".LoginActivity"> <!-- tools:context'i .LoginActivity olarak değiştirdim, .MainActivity yerine -->
+    tools:context=".ui.activities.LoginActivity"> <!-- tools:context'i .LoginActivity olarak değiştirdim, .MainActivity yerine -->
 
     <!-- Bu drawable'ın projenizde olduğundan emin olun: @drawable/gradient_background -->
 

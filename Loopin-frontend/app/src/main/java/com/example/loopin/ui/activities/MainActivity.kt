@@ -1,4 +1,4 @@
-package com.example.loopin
+package com.example.loopin.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,6 +10,8 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.loopin.PreferenceManager
+import com.example.loopin.R
 import com.example.loopin.databinding.ActivityMainBinding
 
 /*Uygulamanın en önemli kısmı; home, chats, events ve calendar fragmentlerini içerir.
@@ -26,6 +28,10 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val userId = PreferenceManager.getUserId()
+        println(userId)
+
 
         //Arama çubuğunun fonksiyonu sonradan eklenecek
         val searchView = findViewById<SearchView>(R.id.search_view)
@@ -48,7 +54,10 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         val appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.navigation_chats, R.id.navigation_chats, R.id.navigation_events, R.id.navigation_calendar
+                R.id.navigation_chats,
+                R.id.navigation_chats,
+                R.id.navigation_events,
+                R.id.navigation_calendar
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

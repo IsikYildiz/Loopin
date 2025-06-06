@@ -1,4 +1,4 @@
-package com.example.loopin
+package com.example.loopin.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.loopin.PreferenceManager
 import com.example.loopin.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -49,12 +50,7 @@ class LoginActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             val loginResponse = response.body()
                             if (loginResponse != null && loginResponse.success) {
-                                // Bunun sonradan gösterilmesine gerek yok
-                                Toast.makeText(
-                                    this@LoginActivity,
-                                    "Login Successful! User: ${loginResponse.user?.username}",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                loginResponse.user?.let { it1 -> PreferenceManager.saveUserId(it1.userId) }
 
                                 val intent = Intent(this@LoginActivity, MainActivity::class.java)
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

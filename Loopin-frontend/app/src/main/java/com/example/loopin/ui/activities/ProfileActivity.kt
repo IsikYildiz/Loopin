@@ -1,4 +1,4 @@
-package com.example.loopin
+package com.example.loopin.ui.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
