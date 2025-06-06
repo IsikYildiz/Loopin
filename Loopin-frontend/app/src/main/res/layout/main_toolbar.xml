@@ -14,7 +14,6 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="8dp">
 
-        <!-- Arama Çubuğu -->
         <androidx.appcompat.widget.SearchView
             android:id="@+id/search_view"
             android:layout_width="0dp"
@@ -22,7 +21,6 @@
             android:layout_weight="1"
             android:queryHint="Ara..." />
 
-        <!-- Düğme 1 -->
         <ImageButton
             android:id="@+id/buttonNotifications"
             android:layout_width="48dp"
@@ -30,9 +28,8 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Bildirimler"
             android:scaleType="centerInside"
-            android:src="@drawable/notification_icon" />
+            android:src="@drawable/notification_icon" /> <!-- Bu drawable'ın projenizde olduğundan emin olun -->
 
-        <!-- Düğme 2 -->
         <ImageButton
             android:id="@+id/buttonProfile"
             android:layout_width="51dp"
@@ -40,7 +37,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Profil"
             android:scaleType="centerInside"
-            android:src="@drawable/profile_icon" />
+            android:src="@drawable/profile_icon" /> <!-- Bu drawable'ın projenizde olduğundan emin olun -->
     </LinearLayout>
 
 </androidx.appcompat.widget.Toolbar>
