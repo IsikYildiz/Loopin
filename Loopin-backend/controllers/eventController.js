@@ -18,6 +18,7 @@ exports.createEvent = async (req, res) => {
     password
   } = req.body;
 
+  // Gerekli alan kontrolü
   if (!creatorId || !eventName || !startTime || !endTime || !maxParticipants) {
     return res.status(400).json({ success: false, message: "Required fields missing" });
   }
@@ -28,32 +29,65 @@ exports.createEvent = async (req, res) => {
       hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO events 
-        (creatorId, eventName, eventLocation, startTime, endTime, description, createdAt, maxParticipants, isPrivate, password)
-       VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)`,
-      [
-        creatorId,
-        eventName,
-        eventLocation || null,
-        startTime,
-        endTime,
-        description || null,
-        parseInt(maxParticipants, 10),
-        isPrivate ? 1 : 0,
-        hashedPassword
-      ]
-    );
+    // Transaction başlat
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
 
-    res.status(201).json({ success: true, eventId: result.insertId });
+    try {
+      // Etkinliği oluştur
+      const [eventResult] = await connection.query(
+        `INSERT INTO events 
+         (creatorId, eventName, eventLocation, startTime, endTime, description, maxParticipants, isPrivate, password)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          creatorId,
+          eventName,
+          eventLocation || null,
+          startTime,
+          endTime,
+          description || null,
+          parseInt(maxParticipants, 10),
+          isPrivate ? 1 : 0,
+          hashedPassword
+        ]
+      );
+
+      // Oluşturanı etkinliğe katılımcı olarak ekle
+      await connection.query(
+        `INSERT INTO eventparticipants 
+         (userId, eventId, status, joinedAt)
+         VALUES (?, ?, 'joined', NOW())`,
+        [creatorId, eventResult.insertId]
+      );
+
+      // Transaction'ı tamamla
+      await connection.commit();
+      connection.release();
+
+      res.status(201).json({ 
+        success: true, 
+        message: 'Event created successfully',
+        eventId: eventResult.insertId 
+      });
+    } catch (error) {
+      // Hata durumunda rollback
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Error creating event:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message,
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
 // Event güncelleme
 exports.updateEvent = async (req, res) => {
-  const eventId = req.params.id;
+  const eventId = req.params.eventId;
   const {
     eventName,
     eventLocation,
@@ -129,7 +163,7 @@ exports.updateEvent = async (req, res) => {
 
 // Event silme
 exports.deleteEvent = async (req, res) => {
-  const eventId = req.params.id;
+  const eventId = req.params.eventId;
   const { userId } = req.body;
 
   if (!userId) {
@@ -158,7 +192,7 @@ exports.deleteEvent = async (req, res) => {
 
 // Etkinlik detayını getirme
 exports.getEventById = async (req, res) => {
-  const eventId = req.params.id;
+  const eventId = req.params.eventId;
 
   try {
     const [rows] = await pool.query(`SELECT * FROM events WHERE eventId = ?`, [eventId]);

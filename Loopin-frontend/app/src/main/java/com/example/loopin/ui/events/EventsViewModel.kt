@@ -33,12 +33,14 @@ class EventsViewModel : ViewModel() {
             try {
                 // ApiClient aracılığıyla sunucudaki doğru endpoint'e istek atıyoruz.
                 val response = ApiClient.eventApi.getEventsUserParticipates(userId)
+                val responseUpcoming = ApiClient.eventApi.getUpcomingEventsUserParticipates(userId)
 
                 // Eğer istek başarılı olduysa ve sunucudan gelen cevap olumluysa...
-                if (response.isSuccessful && response.body() != null) {
+                if (response.isSuccessful && response.body() != null && responseUpcoming.isSuccessful && responseUpcoming.body() != null) {
                     // Gelen etkinlik listesini _events LiveData'sına gönderiyoruz.
                     // Bu sayede arayüz (Fragment) otomatik olarak güncellenecek.
-                    _events.value = response.body()!!.events
+                    val events = response.body()!!.events + responseUpcoming.body()!!.events
+                    _events.value = events
                 } else {
                     // İstek başarısız olursa Logcat'e hata basıyoruz.
                     Log.e("EventsViewModel", "Etkinlikler çekilemedi: ${response.errorBody()?.string()}")

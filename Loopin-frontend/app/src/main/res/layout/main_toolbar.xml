@@ -14,18 +14,12 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="8dp">
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/search_view"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:queryHint="Ara..." />
-
         <ImageButton
             android:id="@+id/buttonNotifications"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:padding="12dp"
+            android:layout_marginStart="290dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Bildirimler"
             android:scaleType="centerInside"

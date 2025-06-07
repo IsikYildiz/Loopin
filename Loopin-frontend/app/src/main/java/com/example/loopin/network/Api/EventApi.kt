@@ -22,7 +22,7 @@ interface EventApi {
     @POST("events")
     suspend fun createEvent(@Body request: CreateEventRequest): Response<CreateEventResponse>
 
-    @PUT("events/{id}")
+    @PATCH("events/{id}")
     suspend fun updateEvent(
         @Path("id") eventId: Int,
         @Body request: UpdateEventRequest

@@ -69,7 +69,6 @@ class CreateEventViewModel : ViewModel() {
         }
     }
 
-    // --- DÜZELTİLMİŞ FONKSİYON ---
     fun updateEvent(
         eventId: Int,
         eventName: String,

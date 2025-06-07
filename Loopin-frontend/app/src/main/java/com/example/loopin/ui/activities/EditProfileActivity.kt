@@ -22,6 +22,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
         binding = ActivityEditProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -80,7 +79,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNavigationAndButtons() {
-        val searchView = findViewById<SearchView>(R.id.search_view)
         val buttonNotifications = findViewById<ImageButton>(R.id.buttonNotifications)
         val buttonProfile = findViewById<ImageButton>(R.id.buttonProfile)
 
