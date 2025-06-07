@@ -9,7 +9,7 @@ router.post('/check-username', userController.checkUsername);
 router.post('/check-email', userController.checkEmail);
 // Dikkat bunlar post değil
 router.patch('/update-profile', userController.updateProfile);
-router.get('/det-profile', userController.getUserProfile);
+router.get('/get-profile', userController.getUserProfile);
 router.delete('/delete-profile', userController.deleteAccount);
 router.patch('/change-password', userController.changePassword);
 

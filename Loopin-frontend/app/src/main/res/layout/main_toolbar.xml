@@ -25,6 +25,7 @@
             android:id="@+id/buttonNotifications"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:padding="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Bildirimler"
             android:scaleType="centerInside"
@@ -32,8 +33,9 @@
 
         <ImageButton
             android:id="@+id/buttonProfile"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Profil"
             android:scaleType="centerInside"

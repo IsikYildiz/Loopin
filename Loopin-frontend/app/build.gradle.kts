@@ -35,6 +35,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        dataBinding = true
     }
 }
 
@@ -49,11 +50,13 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.mediarouter)
+    implementation(libs.androidx.ui.text.android)
     testImplementation(libs.junit)
-    implementation(libs.retrofit)
-    implementation(libs.okhttp)
+    implementation(libs.retrofit) // Api istekleri için gerekli kütüphane
+    implementation(libs.okhttp) // Http istekleri için gerekli kütüphane
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.retrofit.converter.gson)
     androidTestImplementation(libs.androidx.junit)
+    implementation(libs.calendarview) // Takvim için gerekli kütüphane
     androidTestImplementation(libs.androidx.espresso.core)
 }

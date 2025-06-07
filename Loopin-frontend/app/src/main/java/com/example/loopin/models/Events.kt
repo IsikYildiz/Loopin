@@ -8,7 +8,7 @@ data class CreateEventRequest(
     val endTime: String,
     val description: String? = null,
     val maxParticipants: Int,
-    val isPrivate: Boolean = false,
+    val isPrivate: Int = 0,
     val password: String? = null
 )
 
@@ -63,7 +63,7 @@ data class Event(
     val description: String? = null,
     val createdAt: String,
     val maxParticipants: Int,
-    val isPrivate: Boolean,
+    val isPrivate: Int,
     val password: String? = null
 )
 
@@ -133,7 +133,7 @@ data class SearchEventsRequest(
     val location: String? = null,
     val startDate: String? = null,
     val endDate: String? = null,
-    val isPrivate: Boolean? = null,
+    val isPrivate: Int? = null,
     val page: Int = 1,
     val limit: Int = 10
 )

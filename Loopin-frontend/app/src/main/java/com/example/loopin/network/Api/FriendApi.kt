@@ -9,16 +9,16 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface FriendApi {
-    @POST("friends/request")
+    @POST("friends/requests")
     suspend fun sendFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/accept")
+    @POST("friends/requests/accept")
     suspend fun acceptFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/reject")
+    @POST("friends/requests/reject")
     suspend fun rejectFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/remove")
+    @POST("friends/")
     suspend fun removeFriend(@Body request: FriendRequest): Response<FriendResponse>
 
     @GET("friends/{userId}")

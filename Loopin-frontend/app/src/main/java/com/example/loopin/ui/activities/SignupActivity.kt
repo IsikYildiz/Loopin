@@ -18,6 +18,7 @@ import com.example.loopin.models.CheckUsernameRequest
 import com.example.loopin.models.CheckEmailRequest
 import com.example.loopin.network.ApiClient
 
+
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding

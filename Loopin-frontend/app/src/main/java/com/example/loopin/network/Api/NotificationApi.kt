@@ -9,7 +9,7 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface NotificationApi {
-    @GET("notifications/{userId}")
+    @GET("notifications/user/{userId}")
     suspend fun getUserNotifications(
         @Path("userId") userId: Int,
         @Query("isRead") isRead: Boolean? = null,
@@ -24,10 +24,10 @@ interface NotificationApi {
         @Body request: MarkAsReadRequest
     ): Response<MarkAsReadResponse>
 
-    @PUT("notifications/mark-all-read")
+    @PUT("notifications/read-all")
     suspend fun markAllAsRead(@Body request: MarkAsReadRequest): Response<MarkAsReadResponse>
 
-    @GET("notifications/{userId}/unread-count")
+    @GET("notifications/user/{userId}/unread-count")
     suspend fun getUnreadCount(@Path("userId") userId: Int): Response<UnreadCountResponse>
 
     @DELETE("notifications/{notificationId}")

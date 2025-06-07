@@ -43,31 +43,31 @@ interface EventApi {
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>
 
-    @GET("events/created-by/{userId}")
+    @GET("events/creator/{userId}")
     suspend fun getEventsCreatedByUser(
         @Path("userId") userId: Int,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>
 
-    @GET("events/participating/{userId}")
+    @GET("events/participants/past/{userId}")
     suspend fun getEventsUserParticipates(
         @Path("userId") userId: Int,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>
 
-    @GET("events/upcoming/{userId}")
+    @GET("events/participants/upcoming/{userId}")
     suspend fun getUpcomingEventsUserParticipates(
         @Path("userId") userId: Int,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>
 
-    @POST("events/join")
+    @POST("events/{eventId}/join")
     suspend fun joinEvent(@Body request: JoinEventRequest): Response<JoinEventResponse>
 
-    @POST("events/leave")
+    @POST("events/{eventId}/leave")
     suspend fun leaveEvent(@Body request: LeaveEventRequest): Response<LeaveEventResponse>
 
     @GET("events/{eventId}/participants")
