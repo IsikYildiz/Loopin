@@ -10,11 +10,12 @@ import android.widget.Toast
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.loopin.PreferenceManager // Kullanılıyorsa kalsın
+import com.example.loopin.PreferenceManager
 import com.example.loopin.R
-import com.example.loopin.databinding.CalendarDayTitleTextBinding // Gün başlıkları için
+import com.example.loopin.databinding.CalendarDayTitleTextBinding
 import com.example.loopin.databinding.FragmentCalendarBinding
-import com.example.loopin.network.ApiClient // Kullanılıyorsa kalsın
+import com.example.loopin.network.ApiClient
+import com.example.loopin.network.OpenMeteoApiClient
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.DayPosition
@@ -28,8 +29,15 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import java.time.LocalDate
+import androidx.appcompat.app.AlertDialog // AlertDialog için import
+import java.time.format.FormatStyle
 
 class CalendarFragment : Fragment() {
+    private var lastWeatherFetchTime: Long = 0L
+    private val weatherFetchCooldownMillis: Long = 12 * 1000 // 12 saniye
+    private var lastFetchedLocation: String? = null
+    private var lastFetchedWeatherForDay: Pair<LocalDate, String>? = null
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
@@ -37,13 +45,11 @@ class CalendarFragment : Fragment() {
     private var selectedDay: CalendarDay? = null
     private var events: List<Pair<String, CalendarDay>> = emptyList()
 
-    // Ay ve Yıl başlığı için formatlayıcı
-    // Locale.getDefault() yerine istediğiniz bir Locale kullanabilirsiniz, örneğin Locale("tr")
     private val monthTitleFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     inner class DayViewContainer(view: View) : ViewContainer(view) {
         val textView: TextView = view.findViewById(R.id.calendarDayText)
-        val underline: View = view.findViewById(R.id.underline) // calendar_day_layout.xml'de bu ID olmalı
+        val underline: View = view.findViewById(R.id.underline)
     }
 
     override fun onCreateView(
@@ -57,18 +63,18 @@ class CalendarFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupCalendarView()
         setupDayTitles()
-        loadEvents() // Etkinlikleri yükle
+        loadEvents()
+        setupMonthNavigation()
+    }
 
-        // Ay ve Yıl Navigasyon Butonları için Listener'lar
+    private fun setupMonthNavigation() {
         binding.nextMonthButton.setOnClickListener {
             binding.calendarView.findFirstVisibleMonth()?.let {
                 binding.calendarView.smoothScrollToMonth(it.yearMonth.plusMonths(1))
             }
         }
-
         binding.previousMonthButton.setOnClickListener {
             binding.calendarView.findFirstVisibleMonth()?.let {
                 binding.calendarView.smoothScrollToMonth(it.yearMonth.minusMonths(1))
@@ -76,198 +82,338 @@ class CalendarFragment : Fragment() {
         }
     }
 
+
     private fun setupCalendarView() {
         val currentMonth = YearMonth.now()
-        // Takvim aralığını ihtiyacınıza göre ayarlayın
         val startMonth = currentMonth.minusMonths(100)
         val endMonth = currentMonth.plusMonths(100)
-        // Locale'e göre haftanın ilk gününü al (Pazartesi, Pazar vb.)
         val firstDayOfWeek = firstDayOfWeekFromLocale()
 
-        // CalendarView'ı ayarla
         binding.calendarView.setup(startMonth, endMonth, firstDayOfWeek)
-        // Mevcut aya kaydır
         binding.calendarView.scrollToMonth(currentMonth)
 
-        // Ay kaydırıldığında ay/yıl başlığını güncelle
         binding.calendarView.monthScrollListener = { calendarMonth: CalendarMonth ->
             updateMonthYearText(calendarMonth.yearMonth)
         }
 
-        // Günleri bağlamak için binder
         binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
-            override fun create(view: View) = DayViewContainer(view) // calendar_day_layout.xml'i inflate eder
+            override fun create(view: View) = DayViewContainer(view)
             override fun bind(container: DayViewContainer, data: CalendarDay) {
                 bindDayView(container, data)
             }
         }
-        // Başlangıçta ay/yıl başlığını ayarla
         updateMonthYearText(currentMonth)
     }
 
     private fun updateMonthYearText(yearMonth: YearMonth) {
-        // XML'de tanımladığınız monthYearText TextView'ını güncelle
         binding.monthYearText.text = monthTitleFormatter.format(yearMonth)
     }
 
     private fun bindDayView(container: DayViewContainer, day: CalendarDay) {
         container.textView.text = day.date.dayOfMonth.toString()
 
-        if (day.position == DayPosition.MonthDate) { // Sadece mevcut ayın günleri için işlem yap
-            container.textView.visibility = View.VISIBLE // Görünür yap
-            container.underline.visibility = View.INVISIBLE // Başlangıçta alt çizgiyi gizle
+        if (day.position == DayPosition.MonthDate) {
+            container.textView.visibility = View.VISIBLE
+            container.underline.visibility = if (events.any { it.second.date == day.date }) View.VISIBLE else View.INVISIBLE
 
-            val hasEvent = events.any { it.second.date == day.date } // Sadece tarih kısmını karşılaştır
-            container.underline.visibility = if (hasEvent) View.VISIBLE else View.INVISIBLE
-
-            if (selectedDay?.date == day.date) { // Sadece tarih kısmını karşılaştır
-                container.textView.setBackgroundResource(R.drawable.selected_day_bg)
-                // container.textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white)) // Örnek
-            } else {
-                container.textView.background = null
-                // container.textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.default_text_color)) // Örnek
-            }
+            container.textView.setBackgroundResource(
+                if (selectedDay?.date == day.date) R.drawable.selected_day_bg else 0 // 0 for no background
+            )
             container.view.setOnClickListener { onDayClicked(day) }
-        } else { // Ay dışındaki günler
-            container.textView.visibility = View.INVISIBLE // Gizle veya soluklaştır
+        } else {
+            container.textView.visibility = View.INVISIBLE
             container.underline.visibility = View.INVISIBLE
             container.textView.background = null
-            container.view.setOnClickListener(null) // Tıklanabilirliği kaldır
+            container.view.setOnClickListener(null)
         }
     }
 
     private fun setupDayTitles() {
         val daysOfWeek = daysOfWeek(firstDayOfWeek = firstDayOfWeekFromLocale())
-        val titlesLayout = binding.titlesContainer.daysContainer // Bu CalendarDayTitlesContainerBinding üzerinden gelen LinearLayout
-
-        Log.d("CalendarFragment", "titlesLayout child count: ${titlesLayout.childCount}, daysOfWeek size: ${daysOfWeek.size}")
-
+        val titlesLayout = binding.titlesContainer.daysContainer
         if (titlesLayout.childCount == daysOfWeek.size) {
             titlesLayout.children.forEachIndexed { index, childView ->
-                Log.d("CalendarFragment", "ChildView at index $index: ${childView::class.java.name}, Tag: ${childView.tag}") // LOG EKLEYİN
                 try {
-                    // Deneme 1: View'ı doğrudan logla
-                    Log.d("CalendarFragment", "Attempting to bind childView: $childView")
-
-                    // Deneme 2: childView'ın ID'sini logla (eğer bir ID'si varsa)
-                    // try {
-                    //     Log.d("CalendarFragment", "ChildView ID: ${childView.id}, Resources Name: ${if (childView.id != View.NO_ID) resources.getResourceEntryName(childView.id) else "NO_ID"}")
-                    // } catch (e: Exception) {
-                    //     Log.d("CalendarFragment", "Could not get resource name for childView ID.")
-                    // }
-
-                    val itemBinding = CalendarDayTitleTextBinding.bind(childView) // Hata burada oluşuyor
-                    itemBinding.dayTitleText.text = daysOfWeek[index].getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                    Log.d("CalendarFragment", "Successfully bound and set text for index $index")
-                } catch (e: RuntimeException) { // Özellikle RuntimeException'ı yakala
-                    Log.e("CalendarFragment", "RuntimeException binding day title at index $index: ${e.message}", e)
-                    // Hata durumunda alternatif
-                    val textView = childView as? TextView
-                    if (textView != null) {
-                        textView.text = daysOfWeek[index].getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                        Log.d("CalendarFragment", "Fallback: Set text directly to TextView for index $index")
-                    } else {
-                        Log.e("CalendarFragment", "Fallback failed: childView is not a TextView at index $index")
-                    }
+                    CalendarDayTitleTextBinding.bind(childView).dayTitleText.text =
+                        daysOfWeek[index].getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 } catch (e: Exception) {
-                    Log.e("CalendarFragment", "Generic Exception binding day title at index $index: ${e.message}", e)
+                    Log.e("CalendarFragment", "Error binding day title at index $index: ${e.message}", e)
+                    (childView as? TextView)?.text = daysOfWeek[index].getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 }
             }
         } else {
-            Log.e("CalendarFragment", "Day title view count (${titlesLayout.childCount}) does not match days of week count (${daysOfWeek.size}). Ensure calendar_day_titles_container.xml has the correct number of includes.")
+            Log.e("CalendarFragment", "Day title view count mismatch.")
         }
     }
 
     private fun loadEvents() {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                events = getAllParticipatedEvents()
-                binding.calendarView.notifyCalendarChanged() // Takvimi yenile
-            } catch (e: Exception) {
-                Log.e("CalendarFragment", "Error loading events: ${e.message}", e)
-                Toast.makeText(context, "Error loading events", Toast.LENGTH_SHORT).show()
+            val userId = PreferenceManager.getUserId()
+            if (userId != null) {
+                try {
+                    events = getAllParticipatedEvents(userId)
+                    binding.calendarView.notifyCalendarChanged()
+                } catch (e: Exception) {
+                    Log.e("CalendarFragment", "Error loading events: ${e.message}", e)
+                    Toast.makeText(context, "Error loading events", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Log.w("CalendarFragment", "User ID not found, cannot load events.")
+                // Toast.makeText(context, "User not logged in, cannot load events.", Toast.LENGTH_SHORT).show() // İsteğe bağlı
+                events = emptyList()
+                binding.calendarView.notifyCalendarChanged()
             }
         }
     }
 
     private fun onDayClicked(day: CalendarDay) {
-        if (day.position != DayPosition.MonthDate) return // Sadece ay içindeki günlere tıklanabilsin
+        if (day.position != DayPosition.MonthDate) return
 
         val oldSelectedDay = selectedDay
-        selectedDay = if (selectedDay?.date == day.date) null else day // Tekrar tıklayınca seçimi kaldır
+        selectedDay = if (selectedDay?.date == day.date) null else day
 
-        // Önceki ve yeni seçili günleri güncellemek için takvime haber ver
         binding.calendarView.notifyDateChanged(day.date)
         oldSelectedDay?.let { binding.calendarView.notifyDateChanged(it.date) }
 
         if (selectedDay != null) {
-            showEventsForDay(selectedDay!!) // selectedDay null değilse göster
-        } else {
-            // Seçim kaldırıldıysa Toast mesajını temizleyebilir veya başka bir işlem yapabilirsiniz.
-            // Örneğin: Toast.makeText(requireContext(), "Date selection cleared", Toast.LENGTH_SHORT).show()
+            val currentSelectedDay = selectedDay!! // Artık null değil
+            viewLifecycleOwner.lifecycleScope.launch {
+                val userId = PreferenceManager.getUserId()
+                if (userId == null) {
+                    showEventAndWeatherDetailsDialog(currentSelectedDay, "User ID not found. Cannot fetch location.")
+                    return@launch
+                }
+                try {
+                    val response = ApiClient.userApi.getUserProfile(userId)
+                    if (response.isSuccessful && response.body() != null) {
+                        val userLocation = response.body()!!.user?.location
+                        if (userLocation != null) {
+                            fetchAndShowWeatherForDay(currentSelectedDay, userLocation) // Sadece CalendarDay geç
+                        } else {
+                            showEventAndWeatherDetailsDialog(currentSelectedDay, "Location not found in user profile.")
+                        }
+                    } else {
+                        Log.e("CalendarFragment", "Error getting user profile: ${response.code()} - ${response.message()}")
+                        showEventAndWeatherDetailsDialog(currentSelectedDay, "Failed to get user profile.")
+                    }
+                } catch (e: Exception) {
+                    Log.e("CalendarFragment", "Exception getting user profile: ${e.message}", e)
+                    showEventAndWeatherDetailsDialog(currentSelectedDay, "Error fetching user profile.")
+                }
+            }
         }
     }
 
-    private fun showEventsForDay(day: CalendarDay) {
-        // Etkinlikleri filtrelerken sadece tarih kısmını karşılaştır
+
+    private fun fetchAndShowWeatherForDay(calendarDay: CalendarDay, locationName: String) {
+        val selectedDate = calendarDay.date // CalendarDay'den LocalDate al
+        val currentTime = System.currentTimeMillis()
+
+        // 1. Önbellek kontrolü (aynı gün, aynı konum, cooldown süresi dolmamış)
+        if (lastFetchedLocation == locationName &&
+            lastFetchedWeatherForDay?.first == selectedDate &&
+            (currentTime - lastWeatherFetchTime) < weatherFetchCooldownMillis
+        ) {
+            showEventAndWeatherDetailsDialog(calendarDay, lastFetchedWeatherForDay!!.second)
+            return
+        }
+
+        // 2. Cooldown genel kontrolü (farklı gün veya konum olsa bile, son istekten bu yana yeterli süre geçmemişse)
+        if ((currentTime - lastWeatherFetchTime) < weatherFetchCooldownMillis && lastFetchedLocation != null) {
+            val remainingSeconds = (weatherFetchCooldownMillis - (currentTime - lastWeatherFetchTime)) / 1000
+            val cooldownMessage = "Please try again in ${remainingSeconds + 1} seconds"
+            // Cooldown durumunda, en son başarılı hava durumu bilgisini (varsa) veya cooldown mesajını göster
+            val messageToShow = lastFetchedWeatherForDay?.takeIf { it.first == selectedDate }?.second ?: cooldownMessage
+            showEventAndWeatherDetailsDialog(calendarDay, messageToShow)
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val coordinates = LocationGeocoder.getCoordinatesFromLocationName(requireContext(), locationName)
+
+                if (coordinates != null) {
+                    val lat = coordinates.first
+                    val lon = coordinates.second
+                    Log.d("WeatherFetch", "Geocoded '$locationName' to Lat: $lat, Lon: $lon for date: $selectedDate")
+
+                    val dateString = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    val weatherApiResponse = OpenMeteoApiClient.weatherApi.getCurrentWeather(
+                        latitude = lat,
+                        longitude = lon,
+                        startDate = dateString,
+                        endDate = dateString
+                    )
+
+                    if (weatherApiResponse.isSuccessful && weatherApiResponse.body() != null) {
+                        val dailyData = weatherApiResponse.body()!!.daily
+                        if (dailyData?.time?.isNotEmpty() == true) {
+                            val maxTemp = dailyData.temperature2mMax?.getOrNull(0)
+                            val minTemp = dailyData.temperature2mMin?.getOrNull(0)
+                            val precipitation = dailyData.precipitationSum?.getOrNull(0)
+                            val weatherCode = dailyData.weathercode?.getOrNull(0)
+
+                            val weatherDescription = formatWeatherMessage(locationName, maxTemp, minTemp, precipitation, weatherCode)
+                            lastWeatherFetchTime = System.currentTimeMillis()
+                            lastFetchedLocation = locationName
+                            lastFetchedWeatherForDay = selectedDate to weatherDescription
+                            showEventAndWeatherDetailsDialog(calendarDay, weatherDescription)
+                        } else {
+                            // API'den veri geldi ama 'daily' kısmı boş veya hatalı
+                            Log.w("WeatherFetch", "Daily weather data is missing or empty from API for $selectedDate")
+                            handleWeatherError(calendarDay, "Could not find weather information")
+                        }
+                    } else {
+                        Log.e("WeatherFetch", "Forecast API error: ${weatherApiResponse.code()} - ${weatherApiResponse.message()}")
+                        handleWeatherError(calendarDay, "Could not find weather information")
+                    }
+                } else {
+                    Log.e("WeatherFetch", "Geocoder could not find coordinates for '$locationName'")
+                    handleWeatherError(calendarDay, "Could not find weather information") // Konum bulunamayınca da aynı mesaj
+                }
+            } catch (e: Exception) {
+                Log.e("WeatherFetch", "Exception during weather fetch: ${e.message}", e)
+                handleWeatherError(calendarDay, "Could not find weather information") // Genel hata için de aynı mesaj
+            }
+        }
+    }
+
+
+    private fun formatWeatherMessage(
+        location: String,
+        maxTemp: Double?,
+        minTemp: Double?,
+        precipitation: Double?,
+        weatherCode: Int?
+    ): String {
+        val tempString = if (maxTemp != null && minTemp != null) {
+            "${minTemp.toInt()}-${maxTemp.toInt()}°C"
+        } else if (maxTemp != null) {
+            "${maxTemp.toInt()}°C"
+        } else {
+            "N/A Temp" // Sıcaklık bilgisi yoksa
+        }
+
+        val precipitationString = if (precipitation != null && precipitation > 0.0) {
+            ", Rain: ${"%.1f".format(Locale.US, precipitation)}mm"
+        } else if (precipitation != null) { // precipitation == 0.0 veya negatif (genelde olmaz ama)
+            ", No rain" // Daha kısa
+        } else {
+            "" // Yağış bilgisi yok
+        }
+
+        val weatherIcon = getWeatherEmoji(weatherCode)
+        return "$location: $tempString $weatherIcon$precipitationString".trim() // Sondaki boşlukları temizle
+    }
+
+
+    private fun getWeatherEmoji(weatherCode: Int?): String { // public olabilir, eğer başka yerden de kullanılacaksa
+        return when (weatherCode) {
+            0 -> "☀️"
+            1, 2, 3 -> "☁️"
+            45, 48 -> "🌫️"
+            51, 53, 55 -> "Mizzle: 🌧️"
+            56, 57 -> "Freezing Mizzle: ❄️🌧️"
+            61 -> "Slight Rain: 🌧️"
+            63 -> "Moderate Rain: 🌧️"
+            65 -> "Heavy Rain: 🌧️"
+            66, 67 -> "Freezing Rain: ❄️🌧️"
+            71 -> "Slight Snow: ❄️"
+            73 -> "Moderate Snow: ❄️"
+            75 -> "Heavy Snow: ❄️"
+            77 -> "Snow Grains: ❄️"
+            80, 81, 82 -> "Rain Showers: 🌦️"
+            85, 86 -> "Snow Showers: ❄️🌨️"
+            95 -> "Thunderstorm: ⛈️"
+            96, 99 -> "Thunderstorm with Hail: ⛈️🌪️"
+            else -> "🛰️"
+        }
+    }
+
+    // handleWeatherError artık sadece son önbelleği ve zamanı güncelleyip Toast'ı çağırıyor
+    private fun handleWeatherError(calendarDay: CalendarDay, specificErrorMessage: String) {
+        lastWeatherFetchTime = System.currentTimeMillis() // Cooldown için zamanı yine de güncelle
+        // lastFetchedLocation = null; // Hata durumunda son konumu sıfırlamak opsiyonel
+        lastFetchedWeatherForDay = calendarDay.date to specificErrorMessage // Hata mesajını önbelleğe al
+        showEventAndWeatherDetailsDialog(calendarDay, specificErrorMessage)
+    }
+
+    private fun showEventAndWeatherDetailsDialog(day: CalendarDay, weatherInfo: String?) {
         val selectedEvents = events.filter { it.second.date == day.date }
-        val message = if (selectedEvents.isNotEmpty()) {
-            val eventNames = selectedEvents.joinToString(", ") { it.first }
-            "Events on ${day.date.dayOfMonth}/${day.date.monthValue}: $eventNames"
+
+        val eventDetails = if (selectedEvents.isNotEmpty()) {
+            val eventTitles = selectedEvents.joinToString("\n") { "- ${it.first}" } // Her etkinliği yeni satırda ve madde imi ile
+            "Events:\n$eventTitles"
         } else {
-            "No events for ${day.date.dayOfMonth}/${day.date.monthValue}"
+            "No events today."
         }
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+        val weatherDetails = if (weatherInfo != null && weatherInfo.isNotBlank()) {
+            weatherInfo
+        } else {
+            ""
+        }
+
+        var dialogMessageBody = eventDetails
+        if (weatherDetails.isNotBlank()) {
+            dialogMessageBody += "\n\n$weatherDetails" // Etkinlikler ve hava durumu arasına boşluk koy
+        }
+
+        // Dialog başlığı için tarihi formatla
+        val formattedDate = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Details for $formattedDate")
+            .setMessage(dialogMessageBody.trim()) // Baştaki/sondaki boşlukları temizle
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss() // OK butonuna basılınca dialog'u kapat
+            }
+            .setCancelable(true) // Dialog dışına tıklanınca kapanmasını sağlar (isteğe bağlı)
+            .show()
     }
 
-    private suspend fun getAllParticipatedEvents(): List<Pair<String, CalendarDay>> {
+    private suspend fun getAllParticipatedEvents(userId: Int): List<Pair<String, CalendarDay>> {
         fun eventToCalendarDay(eventStartTime: String): CalendarDay {
-            // ISO_OFFSET_DATE_TIME, "2011-12-03T10:15:30+01:00" gibi offset'leri ve "Z" (UTC) yi anlar
             val odt = OffsetDateTime.parse(eventStartTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             return CalendarDay(odt.toLocalDate(), DayPosition.MonthDate)
         }
 
-        val userId = PreferenceManager.getUserId() // Context eklendi
         val allEvents = mutableListOf<Pair<String, CalendarDay>>()
         var currentPage = 1
         var totalPages: Int
 
         // getEventsUserParticipates
         do {
-            if (userId == null) break // userId yoksa döngüye girme
             try {
                 val response = ApiClient.eventApi.getEventsUserParticipates(userId, currentPage)
                 if (response.isSuccessful && response.body() != null) {
                     val eventResponse = response.body()!!
-                    for (event in eventResponse.events) {
-                        val calendarDay = eventToCalendarDay(event.startTime)
-                        allEvents.add(event.eventName to calendarDay)
+                    eventResponse.events.forEach { event ->
+                        allEvents.add(event.eventName to eventToCalendarDay(event.startTime))
                     }
                     totalPages = eventResponse.pagination.totalPages
-                    if (currentPage >= totalPages) break // Son sayfaya ulaşıldıysa çık
+                    if (currentPage >= totalPages) break
                 } else {
                     Log.e("CalendarFragment", "getEventsUserParticipates API error: ${response.code()} - ${response.message()}")
-                    break // Hata durumunda döngüden çık
+                    break
                 }
             } catch (e: Exception) {
                 Log.e("CalendarFragment", "getEventsUserParticipates API call failed: ${e.message}", e)
-                break // İstisna durumunda döngüden çık
+                break
             }
             currentPage++
-        } while (true) // Koşul yukarıda break ile yönetiliyor
+        } while (true)
 
         currentPage = 1
 
         // getUpcomingEventsUserParticipates
         do {
-            if (userId == null) break
             try {
                 val response = ApiClient.eventApi.getUpcomingEventsUserParticipates(userId, currentPage)
                 if (response.isSuccessful && response.body() != null) {
                     val eventResponse = response.body()!!
-                    for (event in eventResponse.events) {
-                        val calendarDay = eventToCalendarDay(event.startTime)
-                        allEvents.add(event.eventName to calendarDay)
+                    eventResponse.events.forEach { event ->
+                        allEvents.add(event.eventName to eventToCalendarDay(event.startTime))
                     }
                     totalPages = eventResponse.pagination.totalPages
                     if (currentPage >= totalPages) break
@@ -282,12 +428,12 @@ class CalendarFragment : Fragment() {
             currentPage++
         } while (true)
 
-        return allEvents.distinctBy { it.first to it.second.date } // Aynı etkinliğin (isim ve tarih) tekrarlarını kaldır
+        return allEvents.distinctBy { it.first to it.second.date }
     }
 
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Bellek sızıntılarını önlemek için
+        _binding = null
     }
 }
