@@ -38,6 +38,6 @@ interface UserApi {
     @DELETE("users/delete-profile/{id]")
     suspend fun deleteAccount(@Path("id") userId: Int): Response<DeleteAccountResponse>
 
-    @PUT("users/change-password")
+    @PATCH("users/change-password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<ChangePasswordResponse>
 }

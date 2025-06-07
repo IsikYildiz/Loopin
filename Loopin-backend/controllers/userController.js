@@ -74,10 +74,8 @@ exports.checkEmail = async (req, res) => {
   }
 };
 
-// --- BU FONKSİYON GÜNCELLENDİ ---
 // Kullanıcının tüm özelliklerini güncelleyebilen fonksiyon. Şifre hariç!!
 exports.updateProfile = async (req, res) => {
-  // 1. Değişiklik: fullName req.body'den alındı.
   const { userId, fullName, username, email, phoneNumber, location, bio } = req.body;
 
   if (!userId) {
@@ -85,7 +83,6 @@ exports.updateProfile = async (req, res) => {
   }
 
   try {
-    // E-posta ve kullanıcı adı kullanım kontrolü... (aynı)
     if (email) {
       const [emailRows] = await db.execute(
         'SELECT userId FROM Users WHERE email = ? AND userId != ?',
@@ -105,11 +102,9 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
-    // Dinamik güncelleme
     const fields = [];
     const values = [];
     
-    // 2. Değişiklik: fullName için if bloğu eklendi.
     if (fullName !== undefined) {
       fields.push("fullName = ?");
       values.push(fullName);
@@ -191,32 +186,51 @@ exports.deleteAccount = async (req, res) => {
   }
 };
 
+// --- BU FONKSİYON LOGLAMA İÇİN GÜNCELLENDİ ---
 // Şifre değiştirme fonksiyonu
 exports.changePassword = async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
+  
+  // 1. Adım: Gelen verileri kontrol edelim ve loglayalım
+  console.log("Şifre değiştirme isteği geldi:", { userId, currentPassword: Boolean(currentPassword), newPassword: Boolean(newPassword) });
 
   if (!userId || !currentPassword || !newPassword) {
-    return res.status(400).json({ success: false, message: "Required fields missing" });
+    return res.status(400).json({ success: false, message: "Gerekli alanlar eksik" });
   }
 
   try {
+    // 2. Adım: Kullanıcıyı ve mevcut şifresini veritabanından alalım
     const [rows] = await db.execute('SELECT passwordHash FROM Users WHERE userId = ?', [userId]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      console.error(`Kullanıcı bulunamadı: userId=${userId}`);
+      return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, rows[0].passwordHash);
+    // 3. Adım: Mevcut şifrenin doğruluğunu karşılaştıralım
+    const user = rows[0];
+    console.log("Veritabanındaki hash:", user.passwordHash);
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      console.warn(`Şifre eşleşmedi: userId=${userId}`);
+      return res.status(401).json({ success: false, message: "Mevcut şifre yanlış" });
     }
 
+    // 4. Adım: Yeni şifreyi hash'leyip veritabanını güncelleyelim
     const newHashed = await bcrypt.hash(newPassword, 10);
+    console.log("Yeni hash oluşturuldu:", newHashed);
+    
     await db.execute('UPDATE Users SET passwordHash = ? WHERE userId = ?', [newHashed, userId]);
+    console.log(`Şifre başarıyla güncellendi: userId=${userId}`);
 
-    res.json({ success: true, message: "Password changed successfully" });
+    // 5. Adım: Başarılı cevabı gönderelim
+    res.json({ success: true, message: "Şifre başarıyla değiştirildi" });
+
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    // Eğer herhangi bir adımda hata olursa, bunu konsola yazdıralım
+    console.error("Şifre değiştirme sırasında KRİTİK HATA:", err);
+    res.status(500).json({ success: false, error: "Sunucuda bir hata oluştu." });
   }
 };
 
