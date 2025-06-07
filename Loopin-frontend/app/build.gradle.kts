@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
 }
 
 android {
@@ -52,6 +53,7 @@ dependencies {
     implementation(libs.androidx.mediarouter)
     implementation(libs.androidx.ui.text.android)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.activity)
     testImplementation(libs.junit)
     implementation(libs.retrofit) // Api istekleri için gerekli kütüphane
     implementation(libs.okhttp) // Http istekleri için gerekli kütüphane
@@ -60,4 +62,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.calendarview) // Takvim için gerekli kütüphane
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    kapt("com.github.bumptech.glide:compiler:4.15.1")
 }

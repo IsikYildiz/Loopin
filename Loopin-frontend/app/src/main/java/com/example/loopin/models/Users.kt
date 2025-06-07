@@ -1,5 +1,7 @@
 package com.example.loopin.models
 
+import java.io.Serializable
+
 data class RegisterRequest(
     val fullName: String,
     val username: String,
@@ -50,12 +52,14 @@ data class CheckEmailResponse(
 
 data class UpdateProfileRequest(
     val userId: Int,
+    val fullName: String? = null,    // <-- EKLENDİ
     val username: String? = null,
-    val email: String? = null,
     val phoneNumber: String? = null,
     val location: String? = null,
     val bio: String? = null
+    // val email: String? = null,  <-- BU SATIR SİLİNDİ (veya yorum satırı yapıldı)
 )
+
 
 data class UpdateProfileResponse(
     val success: Boolean,
@@ -80,7 +84,7 @@ data class UserProfile(
     val location: String? = null,
     val bio: String? = null,
     val profileImage: String? = null
-)
+): Serializable
 
 data class ChangePasswordRequest(
     val userId: Int,

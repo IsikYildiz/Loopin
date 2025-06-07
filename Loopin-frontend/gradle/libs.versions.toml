@@ -18,6 +18,7 @@ okhttp = "4.12.0"
 calendarview = "2.7.0"
 uiTextAndroid = "1.8.2"
 playServicesLocation = "21.3.0"
+activity = "1.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,7 @@ retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-
 calendarview = { group = "com.kizitonwose.calendar", name = "view", version.ref = "calendarview" }
 androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "uiTextAndroid" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
