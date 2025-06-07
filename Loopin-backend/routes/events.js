@@ -6,13 +6,13 @@ const eventController = require('../controllers/eventController');
 router.post('/', eventController.createEvent);
 
 // Etkinlik silme (eventId, userId genelde body veya query'de gönderilir)
-router.delete('/:id', eventController.deleteEvent);
+router.delete('/:eventId', eventController.deleteEvent);
 
 // Etkinlik güncelleme
-router.patch('/:id', eventController.updateEvent);
+router.patch('/:eventId', eventController.updateEvent);
 
 // Belirli bir etkinliği getirme
-router.get('/:id', eventController.getEventById);
+router.get('/:eventId', eventController.getEventById);
 
 // Kullanıcının oluşturduğu etkinlikleri getirme
 router.get('/creator/:userId', eventController.getEventsCreatedByUser);

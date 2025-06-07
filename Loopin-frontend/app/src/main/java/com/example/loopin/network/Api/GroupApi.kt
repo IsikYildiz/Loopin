@@ -24,7 +24,7 @@ interface GroupApi {
     @POST("groups")
     suspend fun createGroup(@Body request: CreateGroupRequest): Response<CreateGroupResponse>
 
-    @PUT("groups/{groupId}")
+    @PATCH("groups/{groupId}")
     suspend fun updateGroup(
         @Path("groupId") groupId: Int,
         @Body request: UpdateGroupRequest

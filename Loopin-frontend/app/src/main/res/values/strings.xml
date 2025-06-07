@@ -8,4 +8,24 @@
     <string name="password_hint">Password</string>
     <string name="login_button_text">Login</string>
     <string name="signup_button_text">Sign Up</string>
+
+    <!-- Location Related Strings -->
+    <string name="location_permission_needed_title">Location Permission Required</string>
+    <string name="location_permission_rationale">We need your location permission to show nearby activities and save your location. Please grant the permission.</string>
+    <string name="location_services_disabled_prompt">Please enable your device\'s location services to determine your location.</string>
+    <string name="update_location_title">Update Location</string>
+    <string name="update_location_prompt">Your current location is: %1$s.\nWould you like to save this location to your profile?</string>
+
+    <string name="location_not_retrieved">Could not retrieve location information.</string>
+    <string name="location_error">Error getting location: %1$s</string>
+    <string name="location_updated_successfully">Your location has been updated.</string>
+    <string name="location_update_failed">Failed to update location.</string>
+    <string name="location_update_error_generic">An error occurred while updating location.</string>
+
+    <!-- Generic UI Strings -->
+    <string name="settings">Settings</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

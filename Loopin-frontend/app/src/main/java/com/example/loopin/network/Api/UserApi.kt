@@ -29,13 +29,13 @@ interface UserApi {
     @POST("users/check-email")
     suspend fun checkEmail(@Body request: CheckEmailRequest): Response<CheckEmailResponse>
 
-    @PUT("users/update-profile")
+    @PATCH("users/update-profile")
     suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<UpdateProfileResponse>
 
-    @GET("users/get-profile")
+    @GET("users/get-profile/{id}")
     suspend fun getUserProfile(@Path("id") userId: Int): Response<UserProfileResponse>
 
-    @DELETE("users/delete-profile")
+    @DELETE("users/delete-profile/{id]")
     suspend fun deleteAccount(@Path("id") userId: Int): Response<DeleteAccountResponse>
 
     @PUT("users/change-password")

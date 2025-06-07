@@ -7,10 +7,14 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/check-username', userController.checkUsername);
 router.post('/check-email', userController.checkEmail);
-// Dikkat bunlar post değil
-router.patch('/update-profile', userController.updateProfile);
-router.get('/get-profile', userController.getUserProfile);
-router.delete('/delete-profile', userController.deleteAccount);
+
+// Profil güncelleme
+router.patch('/update-profile', userController.updateProfile); // userId body'den alınıyor, bu OK.
+
+// Profil getirme ve silme için path parametresi ekleyin
+router.get('/get-profile/:id', userController.getUserProfile);      
+router.delete('/delete-profile/:id', userController.deleteAccount); 
+
 router.patch('/change-password', userController.changePassword);
 
 module.exports = router;

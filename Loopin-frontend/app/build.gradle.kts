@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.mediarouter)
     implementation(libs.androidx.ui.text.android)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     implementation(libs.retrofit) // Api istekleri için gerekli kütüphane
     implementation(libs.okhttp) // Http istekleri için gerekli kütüphane
