@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="@drawable/gradient_background"
     tools:context=".ui.activities.EditProfileActivity">
 
     <LinearLayout
@@ -12,73 +13,76 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Tam İsim Alanı -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tam İsim" />
+            android:text="Tam İsim"
+            android:textColor="@android:color/white" />
         <EditText
             android:id="@+id/editFullName"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Kullanıcı Adı Alanı -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kullanıcı Adı" />
+            android:text="Kullanıcı Adı"
+            android:textColor="@android:color/white" />
         <EditText
             android:id="@+id/editUsername"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Bio Alanı -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bio" />
+            android:text="Bio"
+            android:textColor="@android:color/white" />
         <EditText
             android:id="@+id/editBio"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Konum Alanı -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Konum" />
+            android:text="Konum"
+            android:textColor="@android:color/white" />
         <EditText
             android:id="@+id/editLocation"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Telefon Numarası Alanı -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Telefon Numarası" />
+            android:text="Telefon Numarası"
+            android:textColor="@android:color/white" />
         <EditText
             android:id="@+id/editPhoneNumber"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="phone"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Boşluk bırakmak için -->
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Kaydet Butonu -->
         <Button
             android:id="@+id/buttonSave"
             android:layout_width="match_parent"
@@ -87,12 +91,12 @@
             android:layout_marginTop="24dp"
             android:text="KAYDET" />
 
-        <!-- ProgressBar (görünmez, butonun arkasında gibi düşünülebilir) -->
         <ProgressBar
             android:id="@+id/saveProgressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:indeterminateTint="@android:color/white"
             android:visibility="gone" />
 
     </LinearLayout>

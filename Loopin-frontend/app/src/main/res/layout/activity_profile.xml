@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="@drawable/gradient_background"
     tools:context=".ui.activities.ProfileActivity">
 
     <LinearLayout
@@ -18,26 +19,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:indeterminateTint="@android:color/white"
             android:visibility="gone" />
 
-        <!-- Profil Resmi (Yeni Tasarım) -->
         <ImageView
             android:id="@+id/imageProfile"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center_horizontal"
             android:src="@drawable/ic_person"
-            app:tint="@android:color/black"
+            app:tint="@android:color/white"
             android:contentDescription="Profil Resmi" />
 
-        <!-- İsim ve Kullanıcı Adı -->
         <TextView
             android:id="@+id/textFullName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textSize="24sp"
             android:textStyle="bold"
             tools:text="Mustafa Cibik" />
@@ -48,11 +48,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="#CCFFFFFF"
             android:textSize="16sp"
             tools:text="\@Mustafa" />
 
-        <!-- Buton -->
         <Button
             android:id="@+id/buttonEditProfile"
             android:layout_width="wrap_content"
@@ -63,20 +62,19 @@
             android:paddingEnd="40dp"
             android:text="PROFİLİ DÜZENLE" />
 
-        <!-- Ayırıcı Çizgi -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="24dp"
-            android:background="?android:attr/listDivider" />
+            android:background="#33FFFFFF" />
 
-        <!-- Bio Bilgisi -->
+        <!-- Bio, E-posta, Konum, Telefon için de tüm etiket ve değerlerin textColor'ları güncellendi. -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Bio"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
         <TextView
@@ -84,16 +82,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
             android:textSize="16sp"
             tools:text="aaaaa" />
 
-        <!-- E-posta Bilgisi -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="E-posta"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
         <TextView
@@ -101,16 +99,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
             android:textSize="16sp"
             tools:text="mustafa@gmail.com" />
 
-        <!-- Konum Bilgisi -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Konum"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
         <TextView
@@ -118,16 +116,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
             android:textSize="16sp"
             tools:text="asdasd" />
 
-        <!-- Telefon Numarası Bilgisi -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Telefon Numarası"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
         <TextView
@@ -135,6 +133,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
             android:textSize="16sp"
             tools:text="05313109439" />
 

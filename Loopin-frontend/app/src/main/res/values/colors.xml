@@ -24,4 +24,14 @@
 
     <!-- Input Alanı Çizgi/Çerçeve Rengi -->
     <color name="inputLineColor">#BDBDBD</color>
+
+    <!-- YENİ TEMA RENKLERİ -->
+    <color name="gradientStartGreen">#1FAA59</color>
+    <color name="gradientEndBlue">#0B666A</color>
+    <color name="buttonYellow">#FFC107</color>
+    <color name="logoPurple">#8A2BE2</color> <!-- Loopin yazısı için -->
+
 </resources>
+
+
+
