@@ -52,12 +52,12 @@ data class CheckEmailResponse(
 
 data class UpdateProfileRequest(
     val userId: Int,
-    val fullName: String? = null,    // <-- EKLENDİ
+    val fullName: String? = null,
     val username: String? = null,
     val phoneNumber: String? = null,
     val location: String? = null,
-    val bio: String? = null
-    // val email: String? = null,  <-- BU SATIR SİLİNDİ (veya yorum satırı yapıldı)
+    val bio: String? = null,
+     val email: String? = null,
 )
 
 

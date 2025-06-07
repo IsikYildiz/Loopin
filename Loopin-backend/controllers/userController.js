@@ -74,16 +74,18 @@ exports.checkEmail = async (req, res) => {
   }
 };
 
+// --- BU FONKSİYON GÜNCELLENDİ ---
 // Kullanıcının tüm özelliklerini güncelleyebilen fonksiyon. Şifre hariç!!
 exports.updateProfile = async (req, res) => {
-  const { userId, username, email, phoneNumber, location, bio } = req.body;
+  // 1. Değişiklik: fullName req.body'den alındı.
+  const { userId, fullName, username, email, phoneNumber, location, bio } = req.body;
 
   if (!userId) {
     return res.status(400).json({ success: false, message: "userId is required" });
   }
 
   try {
-    // 1. E-posta kullanımda mı?
+    // E-posta ve kullanıcı adı kullanım kontrolü... (aynı)
     if (email) {
       const [emailRows] = await db.execute(
         'SELECT userId FROM Users WHERE email = ? AND userId != ?',
@@ -93,8 +95,6 @@ exports.updateProfile = async (req, res) => {
         return res.status(409).json({ success: false, message: "Email already in use" });
       }
     }
-
-    // 2. Username kullanımda mı?
     if (username) {
       const [usernameRows] = await db.execute(
         'SELECT userId FROM Users WHERE username = ? AND userId != ?',
@@ -105,10 +105,15 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
-    // 3. Dinamik güncelleme
+    // Dinamik güncelleme
     const fields = [];
     const values = [];
-
+    
+    // 2. Değişiklik: fullName için if bloğu eklendi.
+    if (fullName !== undefined) {
+      fields.push("fullName = ?");
+      values.push(fullName);
+    }
     if (username !== undefined) {
       fields.push("username = ?");
       values.push(username);

@@ -2,6 +2,7 @@ package com.example.loopin.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log // <-- LOG İÇİN IMPORT EKLENDİ
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -47,8 +48,9 @@ class ProfileActivity : AppCompatActivity() {
             return
         }
 
-        // Yükleme animasyonunu göster
         binding.progressBar.visibility = View.VISIBLE
+
+        Log.d("DEBUG_LOOPIN", "[ProfileActivity] Profil bilgileri userId: $userId için çekiliyor...")
 
         lifecycleScope.launch {
             try {
@@ -56,25 +58,30 @@ class ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val profileResponse = response.body()!!
                     if (profileResponse.success && profileResponse.user != null) {
+
+                        // BİZE SUNUCUDAN NE GELDİĞİNİ SÖYLE
+                        Log.d("DEBUG_LOOPIN", "[ProfileActivity] Sunucudan gelen veri: ${profileResponse.user}")
+
                         updateUI(profileResponse.user)
                         currentUserProfile = profileResponse.user
                     } else {
+                        Log.e("DEBUG_LOOPIN", "[ProfileActivity] Sunucu 'success: false' dedi. Mesaj: ${profileResponse.message}")
                         Toast.makeText(this@ProfileActivity, profileResponse.message ?: "Profil bilgileri alınamadı", Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    Log.e("DEBUG_LOOPIN", "[ProfileActivity] Sunucudan hata kodu alındı: ${response.code()}")
                     Toast.makeText(this@ProfileActivity, "Bir hata oluştu: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                Log.e("DEBUG_LOOPIN", "[ProfileActivity] Profil çekilirken Exception oluştu.", e)
                 Toast.makeText(this@ProfileActivity, "Ağ hatası: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
-                // İşlem bitince yükleme animasyonunu gizle
                 binding.progressBar.visibility = View.GONE
             }
         }
     }
 
     private fun updateUI(profile: UserProfile) {
-        // Profil resmi doluysa Glide ile yükle, değilse varsayılan ikonu göster.
         if (!profile.profileImage.isNullOrEmpty()) {
             Glide.with(this)
                 .load(profile.profileImage)
@@ -88,8 +95,6 @@ class ProfileActivity : AppCompatActivity() {
         binding.textFullName.text = profile.fullName
         binding.textUsername.text = "@${profile.username}"
         binding.textEmail.text = profile.email
-
-        // Değerleri ilgili TextView'lara ata. Değer boşsa varsayılan metni göster.
         binding.textBio.text = profile.bio.takeIf { !it.isNullOrBlank() } ?: "Eklenmemiş"
         binding.textLocation.text = profile.location.takeIf { !it.isNullOrBlank() } ?: "Eklenmemiş"
         binding.textPhoneNumber.text = profile.phoneNumber.takeIf { !it.isNullOrBlank() } ?: "Eklenmemiş"
