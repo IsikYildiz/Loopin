@@ -22,7 +22,7 @@
             android:name=".ui.activities.EditProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ProfileActivity"
+            android:name=".ui.activities.ProfileActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.LoginActivity"
@@ -35,9 +35,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activities.MainActivity" />
+        <activity
+            android:name=".ui.activities.CreateEventActivity"
+            android:exported="false"/>
         <activity android:name=".ui.activities.SignupActivity" />
-        <activity android:name=".ui.activities.ProfileActivity" />
         <activity android:name=".ui.activities.NotificationsActivity" />
+        <activity android:name=".ui.activities.EventActivity"/>
     </application>
 
 </manifest>

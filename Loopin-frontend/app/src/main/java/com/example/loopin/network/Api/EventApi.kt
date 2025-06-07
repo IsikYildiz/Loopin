@@ -22,13 +22,13 @@ interface EventApi {
     @POST("events")
     suspend fun createEvent(@Body request: CreateEventRequest): Response<CreateEventResponse>
 
-    @PATCH("events/{id}")
+    @PUT("events/{id}")
     suspend fun updateEvent(
         @Path("id") eventId: Int,
         @Body request: UpdateEventRequest
     ): Response<UpdateEventResponse>
 
-    @DELETE("events/{id}")
+    @HTTP(method = "DELETE", path = "events/{id}", hasBody = true)
     suspend fun deleteEvent(
         @Path("id") eventId: Int,
         @Body request: DeleteEventRequest
