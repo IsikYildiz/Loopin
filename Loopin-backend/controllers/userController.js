@@ -234,3 +234,26 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+exports.updateFcmToken = async (req, res) => {
+  const { userId, fcmToken } = req.body;
+
+  if (!userId || !fcmToken) {
+    return res.status(400).json({ success: false, message: "userId ve fcmToken zorunludur" });
+  }
+
+  try {
+    const [result] = await db.execute(
+      'UPDATE Users SET fcmToken = ? WHERE userId = ?',
+      [fcmToken, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
+    }
+
+    res.json({ success: true, message: "FCM token güncellendi" });
+  } catch (err) {
+    console.error("FCM Token Güncelleme Hatası:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

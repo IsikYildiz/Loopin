@@ -19,6 +19,8 @@ calendarview = "2.7.0"
 uiTextAndroid = "1.8.2"
 playServicesLocation = "21.3.0"
 activity = "1.10.1"
+google-play-services-maps = "19.2.0"
+googleMaps = "18.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,8 +43,9 @@ calendarview = { group = "com.kizitonwose.calendar", name = "view", version.ref 
 androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "uiTextAndroid" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+google-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "google-play-services-maps" }
+google-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "googleMaps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-

@@ -103,3 +103,14 @@ data class DeleteAccountResponse(
     val message: String? = null,
     val error: String? = null
 )
+
+data class UpdateFcmTokenResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val error: String? = null
+)
+
+data class UpdateFcmTokenRequest(
+    val userId: Int,
+    val fcmToken: String
+)

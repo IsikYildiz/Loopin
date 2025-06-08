@@ -2,8 +2,10 @@ package com.example.loopin.ui.activities
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -12,6 +14,8 @@ import com.example.loopin.R
 import com.example.loopin.databinding.ActivityCreateEventBinding
 import com.example.loopin.models.Event
 import com.example.loopin.ui.events.CreateEventViewModel
+import com.example.loopin.ui.events.MapActivity
+import com.google.android.material.textfield.TextInputEditText
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -72,6 +76,11 @@ class CreateEventActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true) // Geri tuşunu her iki modda da göster
 
         setupListeners()
+        val selectLocationButton: Button = findViewById(R.id.select_location_button)
+        selectLocationButton.setOnClickListener {
+            val intent = Intent(this, MapActivity::class.java)
+            startActivityForResult(intent, MAP_REQUEST_CODE)
+        }
         observeViewModel()
     }
 
@@ -354,5 +363,20 @@ class CreateEventActivity : AppCompatActivity() {
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val button = if (isStart) binding.startTimeButton else binding.endTimeButton
         button.text = sdf.format(calendar.time)
+    }
+
+    // onActivityResult ekleyin
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == MAP_REQUEST_CODE && resultCode == RESULT_OK) {
+            val location = data?.getStringExtra("selected_location")
+            location?.let {
+                findViewById<TextInputEditText>(R.id.event_location_edittext).setText(it)
+            }
+        }
+    }
+
+    companion object {
+        private const val MAP_REQUEST_CODE = 1001
     }
 }

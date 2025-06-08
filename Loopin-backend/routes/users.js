@@ -16,5 +16,6 @@ router.get('/get-profile/:id', userController.getUserProfile);
 router.delete('/delete-profile/:id', userController.deleteAccount); 
 
 router.patch('/change-password', userController.changePassword);
+router.post('/update-token', userController.updateFcmToken);
 
 module.exports = router;

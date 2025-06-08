@@ -12,7 +12,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:theme="?attr/actionBarTheme"
-        app:title="Yeni Etkinlik Oluştur"
+        app:title="Create New Event"
         app:titleTextColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -36,7 +36,7 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Etkinlik Adı">
+                android:hint="Event Name">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/event_name_edittext"
                     android:layout_width="match_parent"
@@ -50,13 +50,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Etkinlik Yeri (İsteğe Bağlı)">
+                android:hint="Event Location">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/event_location_edittext"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/select_location_button"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Select Location" />
 
             <!-- Başlangıç Zamanı -->
             <com.google.android.material.card.MaterialCardView
@@ -83,7 +91,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
-                            android:text="Başlangıç Zamanı"
+                            android:text="Start Time"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -98,7 +106,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Tarih Seç" />
+                            android:text="Choose Date" />
                         <Button
                             android:id="@+id/start_time_button"
                             style="?attr/materialButtonOutlinedStyle"
@@ -106,7 +114,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:layout_weight="1"
-                            android:text="Saat Seç" />
+                            android:text="Choose Time" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -136,7 +144,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
-                            android:text="Bitiş Zamanı (İsteğe Bağlı)"
+                            android:text="End Time "
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -151,7 +159,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Tarih Seç" />
+                            android:text="Choose Date" />
                         <Button
                             android:id="@+id/end_time_button"
                             style="?attr/materialButtonOutlinedStyle"
@@ -159,7 +167,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:layout_weight="1"
-                            android:text="Saat Seç" />
+                            android:text="Choose Time" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -171,7 +179,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Açıklama">
+                android:hint="Description">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/event_description_edittext"
                     android:layout_width="match_parent"
@@ -186,7 +194,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Maksimum Katılımcı">
+                android:hint="Maksimum Participants">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/event_max_participants_edittext"
                     android:layout_width="match_parent"
@@ -198,7 +206,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Özel Etkinlik"
+                android:text="Private Event"
                 android:textSize="16sp" />
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/event_password_layout"
@@ -206,7 +214,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:hint="Şifre"
+                android:hint="Password"
                 android:visibility="gone"
                 app:passwordToggleEnabled="true">
                 <com.google.android.material.textfield.TextInputEditText
@@ -225,7 +233,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:padding="12dp"
-        android:text="Etkinliği Oluştur"
+        android:text="Create Event"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

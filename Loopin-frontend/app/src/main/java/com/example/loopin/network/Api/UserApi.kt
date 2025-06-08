@@ -10,6 +10,8 @@ import com.example.loopin.models.LoginRequest
 import com.example.loopin.models.LoginResponse
 import com.example.loopin.models.RegisterRequest
 import com.example.loopin.models.RegisterResponse
+import com.example.loopin.models.UpdateFcmTokenRequest
+import com.example.loopin.models.UpdateFcmTokenResponse
 import com.example.loopin.models.UpdateProfileRequest
 import com.example.loopin.models.UpdateProfileResponse
 import com.example.loopin.models.UserProfileResponse
@@ -40,4 +42,7 @@ interface UserApi {
 
     @PATCH("users/change-password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<ChangePasswordResponse>
+
+    @POST("users/update-token")
+    suspend fun updateFcmToken(@Body request: UpdateFcmTokenRequest): Response<UpdateFcmTokenResponse>
 }
