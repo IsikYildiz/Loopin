@@ -26,9 +26,9 @@ CREATE TABLE `chatmessages` (
   `chatId` int NOT NULL,
   `messageId` int NOT NULL,
   PRIMARY KEY (`chatId`,`messageId`),
-  KEY `messageId` (`messageId`),
-  CONSTRAINT `chatmessages_ibfk_1` FOREIGN KEY (`chatId`) REFERENCES `chats` (`chatId`),
-  CONSTRAINT `chatmessages_ibfk_2` FOREIGN KEY (`messageId`) REFERENCES `messages` (`messageId`)
+  KEY `fk_chatmessages_message` (`messageId`),
+  CONSTRAINT `fk_chatmessages_chat` FOREIGN KEY (`chatId`) REFERENCES `chats` (`chatId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_chatmessages_message` FOREIGN KEY (`messageId`) REFERENCES `messages` (`messageId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -54,10 +54,10 @@ CREATE TABLE `chats` (
   `user1Id` int NOT NULL,
   `user2Id` int NOT NULL,
   PRIMARY KEY (`chatId`),
-  KEY `user1Id` (`user1Id`),
-  KEY `user2Id` (`user2Id`),
-  CONSTRAINT `chats_ibfk_1` FOREIGN KEY (`user1Id`) REFERENCES `users` (`userId`),
-  CONSTRAINT `chats_ibfk_2` FOREIGN KEY (`user2Id`) REFERENCES `users` (`userId`)
+  KEY `fk_chats_user1` (`user1Id`),
+  KEY `fk_chats_user2` (`user2Id`),
+  CONSTRAINT `fk_chats_user1` FOREIGN KEY (`user1Id`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_chats_user2` FOREIGN KEY (`user2Id`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -84,9 +84,9 @@ CREATE TABLE `eventparticipants` (
   `status` enum('joined','invited','requested','rejected') NOT NULL,
   `joinedAt` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`userId`,`eventId`),
-  KEY `eventId` (`eventId`),
-  CONSTRAINT `eventparticipants_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`),
-  CONSTRAINT `eventparticipants_ibfk_2` FOREIGN KEY (`eventId`) REFERENCES `events` (`eventId`)
+  KEY `fk_eventparticipants_event` (`eventId`),
+  CONSTRAINT `fk_eventparticipants_event` FOREIGN KEY (`eventId`) REFERENCES `events` (`eventId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_eventparticipants_user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -96,7 +96,7 @@ CREATE TABLE `eventparticipants` (
 
 LOCK TABLES `eventparticipants` WRITE;
 /*!40000 ALTER TABLE `eventparticipants` DISABLE KEYS */;
-INSERT INTO `eventparticipants` VALUES (1,1,'joined','2025-06-01 19:10:57'),(2,1,'joined','2025-06-01 19:46:49');
+INSERT INTO `eventparticipants` VALUES (1,1,'joined','2025-06-01 19:10:57'),(1,2,'joined','2025-06-08 02:07:37'),(2,1,'joined','2025-06-01 19:46:49');
 /*!40000 ALTER TABLE `eventparticipants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -120,9 +120,9 @@ CREATE TABLE `events` (
   `isPrivate` tinyint(1) NOT NULL DEFAULT '0',
   `password` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`eventId`),
-  KEY `creatorId` (`creatorId`),
-  CONSTRAINT `events_ibfk_1` FOREIGN KEY (`creatorId`) REFERENCES `users` (`userId`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `fk_events_creator` (`creatorId`),
+  CONSTRAINT `fk_events_creator` FOREIGN KEY (`creatorId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,7 +131,7 @@ CREATE TABLE `events` (
 
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
-INSERT INTO `events` VALUES (1,1,'Dolma yeme (canım dolma çekti)','Antartika','2025-06-06 12:40:00','2025-06-06 13:00:00','Etkinlik woo','2025-06-01 19:10:57',20,0,NULL);
+INSERT INTO `events` VALUES (1,1,'Dolma yeme (canım dolma çekti)','Antartika','2025-06-06 12:40:00','2025-06-06 13:00:00','Etkinlik woo','2025-06-01 19:10:57',20,0,NULL),(2,1,'Yaris','Dunya','2025-06-17 23:06:38','2025-06-20 22:06:38','Dunyann etrafinda ilk tur atan kazanir','2025-06-08 02:07:37',5,0,NULL);
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -147,9 +147,9 @@ CREATE TABLE `friendships` (
   `receiverId` int NOT NULL,
   `status` enum('accepted','rejected','pending') NOT NULL DEFAULT 'pending',
   PRIMARY KEY (`senderId`,`receiverId`),
-  KEY `receiverId` (`receiverId`),
-  CONSTRAINT `friendships_ibfk_1` FOREIGN KEY (`senderId`) REFERENCES `users` (`userId`),
-  CONSTRAINT `friendships_ibfk_2` FOREIGN KEY (`receiverId`) REFERENCES `users` (`userId`)
+  KEY `fk_friendships_receiver` (`receiverId`),
+  CONSTRAINT `fk_friendships_receiver` FOREIGN KEY (`receiverId`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_friendships_sender` FOREIGN KEY (`senderId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -176,9 +176,9 @@ CREATE TABLE `groupmembers` (
   `role` enum('admin','member') NOT NULL DEFAULT 'member',
   `joinedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`groupId`,`userId`),
-  KEY `userId` (`userId`),
-  CONSTRAINT `groupmembers_ibfk_1` FOREIGN KEY (`groupId`) REFERENCES `usergroups` (`groupId`),
-  CONSTRAINT `groupmembers_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`)
+  KEY `fk_groupmembers_user` (`userId`),
+  CONSTRAINT `fk_groupmembers_group` FOREIGN KEY (`groupId`) REFERENCES `usergroups` (`groupId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_groupmembers_user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -202,9 +202,9 @@ CREATE TABLE `groupmessages` (
   `groupId` int NOT NULL,
   `messageId` int NOT NULL,
   PRIMARY KEY (`groupId`,`messageId`),
-  KEY `messageId` (`messageId`),
-  CONSTRAINT `groupmessages_ibfk_1` FOREIGN KEY (`groupId`) REFERENCES `usergroups` (`groupId`),
-  CONSTRAINT `groupmessages_ibfk_2` FOREIGN KEY (`messageId`) REFERENCES `messages` (`messageId`)
+  KEY `fk_groupmessages_message` (`messageId`),
+  CONSTRAINT `fk_groupmessages_group` FOREIGN KEY (`groupId`) REFERENCES `usergroups` (`groupId`) ON DELETE CASCADE,
+  CONSTRAINT `fk_groupmessages_message` FOREIGN KEY (`messageId`) REFERENCES `messages` (`messageId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -230,8 +230,8 @@ CREATE TABLE `messages` (
   `content` text NOT NULL,
   `sentAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`messageId`),
-  KEY `senderId` (`senderId`),
-  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`senderId`) REFERENCES `users` (`userId`)
+  KEY `fk_messages_sender` (`senderId`),
+  CONSTRAINT `fk_messages_sender` FOREIGN KEY (`senderId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -260,8 +260,8 @@ CREATE TABLE `notifications` (
   `isRead` tinyint(1) NOT NULL DEFAULT '0',
   `sentAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`notificationId`),
-  KEY `userId` (`userId`),
-  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`)
+  KEY `fk_notifications_user` (`userId`),
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -290,8 +290,8 @@ CREATE TABLE `usergroups` (
   `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `groupImage` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`groupId`),
-  KEY `createdBy` (`createdBy`),
-  CONSTRAINT `usergroups_ibfk_1` FOREIGN KEY (`createdBy`) REFERENCES `users` (`userId`)
+  KEY `fk_usergroups_creator` (`createdBy`),
+  CONSTRAINT `fk_usergroups_creator` FOREIGN KEY (`createdBy`) REFERENCES `users` (`userId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -326,7 +326,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`userId`),
   UNIQUE KEY `userName` (`userName`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -335,7 +335,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Ali Yılmaz','Alii','ali@example.com','$2b$10$cpTjrwy3b4dOLJIXZEklOOhO5O1SYr9B7FTTnbXIPPQhdYb5AXfM2',NULL,NULL,'2025-05-31',NULL,NULL,NULL),(2,'test','test','test@example.com','$2b$10$.bdyZqi9.LcZ4uooiRRmmOwbp177e2cefov/Ldd3EGRUqbjzNgo92',NULL,NULL,'2025-06-01',NULL,NULL,NULL);
+INSERT INTO `users` VALUES (1,'Ali Yılmaz','Ali','ali@example.com','$2b$10$cpTjrwy3b4dOLJIXZEklOOhO5O1SYr9B7FTTnbXIPPQhdYb5AXfM2','Mountain View, United States','Merhaba','2025-05-31',NULL,NULL,'5554'),(2,'test','test','test@example.com','$2b$10$.bdyZqi9.LcZ4uooiRRmmOwbp177e2cefov/Ldd3EGRUqbjzNgo92',NULL,NULL,'2025-06-01',NULL,NULL,NULL),(3,'test','test2','test2@example.com','$2b$10$owtoxr2icWhWdPMxLicyH.7CLbo4sRuVjCiTqgJub/R6Cnjfk6/OS',NULL,NULL,'2025-06-06',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -348,4 +348,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-01 19:47:59
+-- Dump completed on 2025-06-08  5:27:59

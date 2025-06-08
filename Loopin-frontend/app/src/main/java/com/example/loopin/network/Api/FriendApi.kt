@@ -12,16 +12,20 @@ interface FriendApi {
     @POST("friends/requests")
     suspend fun sendFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/requests/accept")
+    // Backend router'da PUT olarak tanımlanmış
+    @PUT("friends/requests/accept")
     suspend fun acceptFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/requests/reject")
+    // Backend router'da PUT olarak tanımlanmış
+    @PUT("friends/requests/reject")
     suspend fun rejectFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
-    @POST("friends/")
+    // Backend router'da DELETE olarak tanımlanmış ve body bekliyor
+    @HTTP(method = "DELETE", path = "friends/", hasBody = true)
     suspend fun removeFriend(@Body request: FriendRequest): Response<FriendResponse>
 
-    @GET("friends/{userId}")
+    // Backend router'da 'friends/user/:userId' olarak tanımlanmış
+    @GET("friends/user/{userId}")
     suspend fun getUserFriends(
         @Path("userId") userId: Int,
         @Query("page") page: Int = 1,

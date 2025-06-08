@@ -87,7 +87,7 @@ exports.createEvent = async (req, res) => {
 
 // Event güncelleme
 exports.updateEvent = async (req, res) => {
-  const eventId = req.params.eventId;
+  const eventId = req.params.eventId  ;
   const {
     eventName,
     eventLocation,

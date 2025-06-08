@@ -5,6 +5,9 @@ const eventController = require('../controllers/eventController');
 // Yeni etkinlik oluşturma
 router.post('/', eventController.createEvent);
 
+// Genel (public, gizli olmayan ve bitmemiş) etkinlikleri getirme
+router.get('/public', eventController.getPublicEvents);
+
 // Etkinlik silme (eventId, userId genelde body veya query'de gönderilir)
 router.delete('/:eventId', eventController.deleteEvent);
 
@@ -22,9 +25,6 @@ router.get('/participants/past/:userId', eventController.getEventsUserParticipat
 
 // Kullanıcının gelecekte katılacağı etkinlikler
 router.get('/participants/upcoming/:userId', eventController.getUpcomingEventsUserParticipates);
-
-// Genel (public, gizli olmayan ve bitmemiş) etkinlikleri getirme
-router.get('/public', eventController.getPublicEvents);
 
 // Etkinliğe katılma (katılımcı ekleme)
 router.post('/:eventId/join', eventController.joinEvent);

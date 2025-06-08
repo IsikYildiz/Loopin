@@ -39,7 +39,8 @@
             android:name=".ui.activities.CreateEventActivity"
             android:exported="false"/>
         <activity android:name=".ui.activities.SignupActivity" />
-        <activity android:name=".ui.activities.NotificationsActivity" />
+        <activity android:name=".ui.activities.friends.FriendsActivity" />
+        <activity android:name=".ui.activities.notifications.NotificationsActivity" />
         <activity android:name=".ui.activities.EventActivity"/>
     </application>
 
