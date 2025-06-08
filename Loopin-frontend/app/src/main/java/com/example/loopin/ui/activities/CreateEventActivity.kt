@@ -104,16 +104,19 @@ class CreateEventActivity : AppCompatActivity() {
      */
     private fun observeViewModel() {
         // Etkinlik oluşturma/güncelleme işleminin sonucunu dinler.
-
-        createEventViewModel.operationStatus.observe(this) { success ->
-            if (success) {
-                // Mod'a göre doğru mesajı göster.
-                val message = if (editModeEventId != -1) "Etkinlik başarıyla güncellendi!" else "Etkinlik başarıyla oluşturuldu!"
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                finish() // İşlem başarılıysa ekranı kapat.
-            } else {
-                // Hata burada gösteriliyor!
-                Toast.makeText(this, "İşlem sırasında bir hata oluştu.", Toast.LENGTH_SHORT).show()
+        createEventViewModel.operationResult.observe(this) { result ->
+            when (result) {
+                is CreateEventViewModel.OperationResult.Success -> {
+                    Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+                    // TODO: İsteğe bağlı olarak kullanıcıyı direkt yeni etkinliğin detay sayfasına yönlendirebiliriz.
+                    // val intent = Intent(this, EventDetailActivity::class.java)
+                    // intent.putExtra("EVENT_ID", result.eventId)
+                    // startActivity(intent)
+                    finish() // İşlem başarılıysa ekranı kapat.
+                }
+                is CreateEventViewModel.OperationResult.Failure -> {
+                    Toast.makeText(this, result.errorMessage, Toast.LENGTH_LONG).show()
+                }
             }
         }
 
@@ -123,6 +126,7 @@ class CreateEventActivity : AppCompatActivity() {
             event?.let { populateForm(it) }
         }
     }
+
 
     /**
      * Düzenleme modunda, formu sunucudan gelen etkinlik verileriyle doldurur.

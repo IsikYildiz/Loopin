@@ -1,12 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/eventController');
+const groupController = require('../controllers/groupController');
+
 
 // Yeni etkinlik oluşturma
 router.post('/', eventController.createEvent);
 
 // Genel (public, gizli olmayan ve bitmemiş) etkinlikleri getirme
 router.get('/public', eventController.getPublicEvents);
+
+// Bu, /api/events/{eventId}/group yolunu oluşturur.
+router.get('/:eventId/group', groupController.getGroupByEventId);
 
 // Etkinlik silme (eventId, userId genelde body veya query'de gönderilir)
 router.delete('/:eventId', eventController.deleteEvent);

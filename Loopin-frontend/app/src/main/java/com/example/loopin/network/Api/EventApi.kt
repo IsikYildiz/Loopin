@@ -51,6 +51,9 @@ interface EventApi {
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>
 
+    @GET("events/{eventId}/group")
+    suspend fun getGroupForEvent(@Path("eventId") eventId: Int): Response<com.example.loopin.models.GroupResponse>
+
     @GET("events/creator/{userId}")
     suspend fun getEventsCreatedByUser(
         @Path("userId") userId: Int,

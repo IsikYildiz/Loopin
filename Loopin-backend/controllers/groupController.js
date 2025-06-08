@@ -3,21 +3,22 @@ const notificationController = require('./notificationController');
 
 // Yeni grup oluşturma
 exports.createGroup = async (req, res) => {
-  const { groupName, groupDescription, createdBy, groupImage } = req.body;
+  // YENİ: eventId'yi de request body'sinden alıyoruz.
+  const { groupName, groupDescription, createdBy, groupImage, eventId } = req.body;
 
   if (!groupName || !createdBy) {
     return res.status(400).json({ success: false, message: 'Group name and creator ID are required' });
   }
 
   try {
-    // Grubu oluştur
+    // YENİ: Veritabanı sorgusunu ve parametreleri güncelliyoruz.
     const [groupResult] = await pool.query(
-      `INSERT INTO usergroups (groupName, groupDescription, createdBy, groupImage) 
-       VALUES (?, ?, ?, ?)`,
-      [groupName, groupDescription || null, createdBy, groupImage || null]
+      `INSERT INTO usergroups (groupName, groupDescription, createdBy, groupImage, eventId) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [groupName, groupDescription || null, createdBy, groupImage || null, eventId || null] // eventId varsa ekle, yoksa null ekle
     );
 
-    // Oluşturanı gruba admin olarak ekle
+    // Oluşturanı gruba admin olarak ekle (Bu kısım aynı kalıyor)
     await pool.query(
       `INSERT INTO groupmembers (groupId, userId, role, joinedAt) 
        VALUES (?, ?, 'admin', NOW())`,
@@ -33,6 +34,7 @@ exports.createGroup = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Grup bilgilerini güncelleme
 exports.updateGroup = async (req, res) => {
@@ -564,6 +566,35 @@ exports.updateMemberRole = async (req, res) => {
     }
 
     res.json({ success: true, message: 'Member role updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Bir etkinliğe bağlı grubu getirme
+exports.getGroupByEventId = async (req, res) => {
+  const eventId = req.params.eventId;
+
+  try {
+    // Veritabanında eventId ile eşleşen grubu bul
+    const [groups] = await pool.query(
+      `SELECT g.*, u.fullName as creatorName, u.profileImage as creatorImage,
+              (SELECT COUNT(*) FROM groupmembers WHERE groupId = g.groupId) as memberCount
+       FROM usergroups g
+       JOIN users u ON g.createdBy = u.userId
+       WHERE g.eventId = ?`,
+      [eventId]
+    );
+
+    if (groups.length === 0) {
+      return res.status(404).json({ success: false, message: 'No group found for this event' });
+    }
+
+    // getGroupById ile aynı formatta bir cevap dönüyoruz.
+    res.json({ 
+      success: true, 
+      group: groups[0]
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

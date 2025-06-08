@@ -102,15 +102,19 @@ class EventDetailViewModel : ViewModel() {
         val userId = PreferenceManager.getUserId() ?: return
         viewModelScope.launch {
             try {
-                val request = JoinEventRequest(eventId, userId)
-                val response = ApiClient.eventApi.joinEvent(request)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    _actionStatus.value = ActionStatus.Success("Etkinliğe katıldınız!")
-                    loadEventData(eventId) // Durumu yenile
+                // SADECE ETKİNLİĞE KATILMA İSTEĞİ GÖNDERİLİR.
+                // Backend artık gruba ekleme işini de yapacak.
+                val joinEventRequest = JoinEventRequest(eventId, userId) // Şifre gerekiyorsa onu da eklemelisiniz.
+                val joinEventResponse = ApiClient.eventApi.joinEvent(joinEventRequest)
+
+                if (joinEventResponse.isSuccessful && joinEventResponse.body()?.success == true) {
+                    _actionStatus.value = ActionStatus.Success("Etkinliğe katıldınız ve sohbet grubuna eklendiniz!")
+                    loadEventData(eventId) // Durumu ve katılımcı listesini yenile
                 } else {
-                    _actionStatus.value = ActionStatus.Failure(response.body()?.error ?: "Katılma başarısız.")
+                    _actionStatus.value = ActionStatus.Failure(joinEventResponse.body()?.error ?: "Katılma başarısız.")
                 }
             } catch (e: Exception) {
+                Log.e("EventDetailViewModel", "Join event failed", e)
                 _actionStatus.value = ActionStatus.Failure("Bir hata oluştu.")
             }
         }
@@ -120,19 +124,35 @@ class EventDetailViewModel : ViewModel() {
         val userId = PreferenceManager.getUserId() ?: return
         viewModelScope.launch {
             try {
-                val request = LeaveEventRequest(eventId, userId)
-                val response = ApiClient.eventApi.leaveEvent(request)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    _actionStatus.value = ActionStatus.Success("Etkinlikten ayrıldınız.")
-                    loadEventData(eventId) // Durumu yenile
+                // --- 1. Grubu Bul ---
+                val groupResponse = ApiClient.eventApi.getGroupForEvent(eventId)
+                if (!groupResponse.isSuccessful || groupResponse.body()?.group == null) {
+                    _actionStatus.value = ActionStatus.Failure("Etkinliğin sohbet grubu bulunamadı.")
+                    return@launch
+                }
+                val groupId = groupResponse.body()!!.group!!.groupId
+
+                // --- 2. Etkinlikten Ayrıl ---
+                val leaveEventRequest = LeaveEventRequest(eventId, userId)
+                val leaveEventResponse = ApiClient.eventApi.leaveEvent(leaveEventRequest)
+
+                if (leaveEventResponse.isSuccessful && leaveEventResponse.body()?.success == true) {
+                    // --- 3. Gruptan Çıkar ---
+                    val removeMemberRequest = com.example.loopin.models.RemoveGroupMemberRequest(userId, userId) // requesterId de kendisi
+                    ApiClient.groupApi.removeGroupMember(groupId, removeMemberRequest)
+
+                    _actionStatus.value = ActionStatus.Success("Etkinlikten ayrıldınız ve gruptan çıkarıldınız.")
+                    loadEventData(eventId) // Durumu ve katılımcı listesini yenile
                 } else {
-                    _actionStatus.value = ActionStatus.Failure(response.body()?.error ?: "Ayrılma başarısız.")
+                    _actionStatus.value = ActionStatus.Failure(leaveEventResponse.body()?.error ?: "Ayrılma başarısız.")
                 }
             } catch (e: Exception) {
+                Log.e("EventDetailViewModel", "Leave event failed", e)
                 _actionStatus.value = ActionStatus.Failure("Bir hata oluştu.")
             }
         }
     }
+
 
 
     fun deleteEvent(eventId: Int) {

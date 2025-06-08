@@ -18,72 +18,78 @@ exports.createEvent = async (req, res) => {
     password
   } = req.body;
 
-  // Gerekli alan kontrolü
+  // Gerekli alan kontrolü (bu kısım aynı kalıyor)
   if (!creatorId || !eventName || !startTime || !endTime || !maxParticipants) {
     return res.status(400).json({ success: false, message: "Required fields missing" });
   }
 
+  // Transaction başlat
+  const connection = await pool.getConnection();
+
   try {
+    await connection.beginTransaction();
+
     let hashedPassword = null;
     if (isPrivate && password) {
       hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     }
 
-    // Transaction başlat
-    const connection = await pool.getConnection();
-    await connection.beginTransaction();
+    // --- ADIM 1: Etkinliği oluştur (Mevcut kodunuz) ---
+    const [eventResult] = await connection.query(
+      `INSERT INTO events 
+       (creatorId, eventName, eventLocation, startTime, endTime, description, maxParticipants, isPrivate, password)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        creatorId, eventName, eventLocation || null, startTime, endTime,
+        description || null, parseInt(maxParticipants, 10), isPrivate ? 1 : 0, hashedPassword
+      ]
+    );
+    const newEventId = eventResult.insertId;
 
-    try {
-      // Etkinliği oluştur
-      const [eventResult] = await connection.query(
-        `INSERT INTO events 
-         (creatorId, eventName, eventLocation, startTime, endTime, description, maxParticipants, isPrivate, password)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          creatorId,
-          eventName,
-          eventLocation || null,
-          startTime,
-          endTime,
-          description || null,
-          parseInt(maxParticipants, 10),
-          isPrivate ? 1 : 0,
-          hashedPassword
-        ]
-      );
+    // --- ADIM 2: Etkinliğe bağlı sohbet grubunu oluştur (YENİ EKLENEN KISIM) ---
+    const [groupResult] = await connection.query(
+      `INSERT INTO usergroups (groupName, groupDescription, createdBy, eventId) 
+       VALUES (?, ?, ?, ?)`,
+      [`${eventName} Grubu`, `Bu grup, '${eventName}' etkinliğinin katılımcıları içindir.`, creatorId, newEventId]
+    );
+    const newGroupId = groupResult.insertId;
 
-      // Oluşturanı etkinliğe katılımcı olarak ekle
-      await connection.query(
-        `INSERT INTO eventparticipants 
-         (userId, eventId, status, joinedAt)
-         VALUES (?, ?, 'joined', NOW())`,
-        [creatorId, eventResult.insertId]
-      );
+    // --- ADIM 3: Etkinliği oluşturanı hem etkinliğe hem de gruba admin olarak ekle ---
+    // Etkinliğe katılımcı olarak ekle (Mevcut kodunuz)
+    await connection.query(
+      `INSERT INTO eventparticipants (userId, eventId, status, joinedAt) VALUES (?, ?, 'joined', NOW())`,
+      [creatorId, newEventId]
+    );
 
-      // Transaction'ı tamamla
-      await connection.commit();
-      connection.release();
+    // Gruba admin olarak ekle (YENİ EKLENEN KISIM)
+    await connection.query(
+      `INSERT INTO groupmembers (groupId, userId, role, joinedAt) VALUES (?, ?, 'admin', NOW())`,
+      [newGroupId, creatorId]
+    );
 
-      res.status(201).json({ 
-        success: true, 
-        message: 'Event created successfully',
-        eventId: eventResult.insertId 
-      });
-    } catch (error) {
-      // Hata durumunda rollback
-      await connection.rollback();
-      connection.release();
-      throw error;
-    }
+    // --- ADIM 4: Her şey başarılıysa transaction'ı onayla ---
+    await connection.commit();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Event and chat group created successfully',
+      eventId: newEventId 
+    });
+
   } catch (err) {
-    console.error('Error creating event:', err);
+    // Hata durumunda tüm işlemleri geri al
+    await connection.rollback();
+    console.error('Error creating event and group:', err);
     res.status(500).json({ 
       success: false, 
-      message: err.message,
-      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      message: err.message
     });
+  } finally {
+    // Bağlantıyı serbest bırak
+    connection.release();
   }
 };
+
 
 // Event güncelleme
 exports.updateEvent = async (req, res) => {
@@ -408,57 +414,96 @@ exports.joinEvent = async (req, res) => {
     return res.status(400).json({ success: false, message: "Event ID and User ID are required" });
   }
 
+  // Transaction için yeni bir bağlantı alıyoruz
+  const connection = await pool.getConnection();
+
   try {
-    const [events] = await pool.query(`SELECT * FROM events WHERE eventId = ?`, [eventId]);
+    // Transaction'ı başlat
+    await connection.beginTransaction();
+
+    const [events] = await connection.query(`SELECT * FROM events WHERE eventId = ? FOR UPDATE`, [eventId]);
 
     if (events.length === 0) {
+      await connection.rollback(); // İşlemi geri al
+      connection.release(); // Bağlantıyı bırak
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     const event = events[0];
 
+    // Gizli etkinlik için şifre kontrolü
     if (event.isPrivate) {
       if (!password) {
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ success: false, message: "Password required for private event" });
       }
       const passwordMatch = await bcrypt.compare(password, event.password);
       if (!passwordMatch) {
+        await connection.rollback();
+        connection.release();
         return res.status(403).json({ success: false, message: "Incorrect password" });
       }
     }
 
-    const [participants] = await pool.query(
-      `SELECT COUNT(*) AS count FROM eventParticipants WHERE eventId = ?`,
-      [eventId]
-    );
+    // Kontenjan kontrolü
+    const [participants] = await connection.query(`SELECT COUNT(*) AS count FROM eventparticipants WHERE eventId = ?`, [eventId]);
     if (participants[0].count >= event.maxParticipants) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ success: false, message: "Event is full" });
     }
 
-    const [existing] = await pool.query(
-      `SELECT * FROM eventParticipants WHERE eventId = ? AND userId = ?`,
-      [eventId, userId]
-    );
+    // Kullanıcının zaten katılımcı olup olmadığını kontrol et
+    const [existing] = await connection.query(`SELECT * FROM eventparticipants WHERE eventId = ? AND userId = ?`, [eventId, userId]);
     if (existing.length > 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ success: false, message: "User already joined this event" });
     }
 
-    await pool.query(
-      `INSERT INTO eventParticipants (eventId, userId, status, joinedAt) VALUES (?, ?, 'joined', NOW())`,
+    // --- ANA DEĞİŞİKLİK BURADA BAŞLIYOR ---
+
+    // 1. Kullanıcıyı etkinliğe ekle
+    await connection.query(
+      `INSERT INTO eventparticipants (eventId, userId, status, joinedAt) VALUES (?, ?, 'joined', NOW())`,
       [eventId, userId]
     );
 
-    // Katılım bildirimi gönder
+    // 2. Etkinliğe bağlı grubu bul
+    const [groups] = await connection.query(`SELECT groupId FROM usergroups WHERE eventId = ?`, [eventId]);
+    if (groups.length > 0) {
+      const groupId = groups[0].groupId;
+      // 3. Kullanıcıyı gruba da ekle (admin kontrolü olmadan)
+      await connection.query(
+        `INSERT INTO groupmembers (groupId, userId, role, joinedAt) VALUES (?, ?, 'member', NOW())
+         ON DUPLICATE KEY UPDATE role=role`, // Eğer zaten üye ise bir şey yapma
+        [groupId, userId]
+      );
+    }
+
+    // Tüm işlemler başarılı, transaction'ı onayla
+    await connection.commit();
+
+    // Katılım bildirimi gönder (bu kısım aynı kalabilir)
     try {
-      await notificationController.createNotification(userId, 'event_invite_accept', { userId, message: "Succesfully joined event", eventId});
+      await notificationController.createNotification(userId, 'event_invite_accept', { userId, message: "Successfully joined event", eventId });
     } catch (error) {
       console.error('Bildirim oluşturulurken hata:', error);
     }
 
-    res.json({ success: true, message: "Successfully joined the event" });
+    res.json({ success: true, message: "Successfully joined the event and chat group" });
+
   } catch (err) {
+    // Herhangi bir hata olursa tüm işlemleri geri al
+    await connection.rollback();
+    console.error('Error during join event transaction:', err);
     res.status(500).json({ success: false, message: err.message });
+  } finally {
+    // Bağlantıyı her zaman serbest bırak
+    connection.release();
   }
 };
+
 
 // Etkinlikten ayrılma (birini etkinlikten çıkarmak için de kullanılabilir)
 exports.leaveEvent = async (req, res) => {

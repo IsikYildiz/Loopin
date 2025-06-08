@@ -13,9 +13,14 @@ import kotlinx.coroutines.launch
 
 class CreateEventViewModel : ViewModel() {
 
-    private val _operationStatus = MutableLiveData<Boolean>()
-    val operationStatus: LiveData<Boolean> = _operationStatus
+    // Sealed class, işlemin başarılı mı, başarısız mı olduğunu ve ek bilgi taşımasını sağlar.
+    sealed class OperationResult {
+        data class Success(val message: String, val eventId: Int?) : OperationResult()
+        data class Failure(val errorMessage: String) : OperationResult()
+    }
 
+    private val _operationResult = MutableLiveData<OperationResult>()
+    val operationResult: LiveData<OperationResult> = _operationResult
     private val _eventToEdit = MutableLiveData<Event?>()
     val eventToEdit: LiveData<Event?> = _eventToEdit
 
@@ -49,25 +54,32 @@ class CreateEventViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val request = CreateEventRequest(
-                    creatorId = creatorId,
-                    eventName = eventName,
-                    eventLocation = eventLocation,
-                    startTime = startTime,
-                    endTime = endTime,
-                    description = description,
-                    maxParticipants = maxParticipants,
-                    isPrivate = isPrivate,
-                    password = password
+                // SADECE Etkinliği Oluşturma İsteği Gönderilecek
+                val eventRequest = CreateEventRequest(
+                    creatorId, eventName, eventLocation, startTime, endTime,
+                    description, maxParticipants, isPrivate, password
                 )
-                val response = ApiClient.eventApi.createEvent(request)
-                _operationStatus.value = response.isSuccessful && response.body()?.success == true
+                val eventResponse = ApiClient.eventApi.createEvent(eventRequest)
+
+                if (eventResponse.isSuccessful && eventResponse.body()?.success == true) {
+                    // Başarılı! Backend artık grubu da oluşturuyor.
+                    _operationResult.value = OperationResult.Success(
+                        "Etkinlik ve sohbet grubu başarıyla oluşturuldu!",
+                        eventResponse.body()?.eventId
+                    )
+                } else {
+                    // Etkinlik oluşturma en başta başarısız oldu.
+                    _operationResult.value = OperationResult.Failure(
+                        "Etkinlik oluşturulamadı: ${eventResponse.errorBody()?.string()}"
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("CreateEventViewModel", "Etkinlik oluşturulurken hata", e)
-                _operationStatus.value = false
+                _operationResult.value = OperationResult.Failure("Bir ağ hatası oluştu.")
             }
         }
     }
+
 
     fun updateEvent(
         eventId: Int,
@@ -92,14 +104,25 @@ class CreateEventViewModel : ViewModel() {
                     isPrivate = (isPrivate == 1),
                     password = password
                 )
-                // Gerçek API isteğini burada yapıyoruz.
+                // 1. API'ye güncelleme isteğini gönderiyoruz.
                 val response = ApiClient.eventApi.updateEvent(eventId, request)
-                // Başarı durumunu API'den gelen cevaba göre ayarlıyoruz.
-                _operationStatus.value = response.isSuccessful && response.body()?.success == true
+
+                // 2. Cevabı yeni OperationResult yapısına göre işliyoruz.
+                if (response.isSuccessful && response.body()?.success == true) {
+                    // Başarılı olursa: Success durumu ve güncellenen eventId ile LiveData'yı tetikle.
+                    _operationResult.value = OperationResult.Success("Etkinlik başarıyla güncellendi!", eventId)
+                } else {
+                    // Başarısız olursa: Failure durumu ve sunucudan gelen hata mesajı ile LiveData'yı tetikle.
+                    val errorMessage = response.body()?.error ?: "Etkinlik güncellenemedi."
+                    Log.e("CreateEventViewModel", "Etkinlik güncellenemedi: ${response.errorBody()?.string()}")
+                    _operationResult.value = OperationResult.Failure(errorMessage)
+                }
             } catch (e: Exception) {
+                // Bir istisna (örn: ağ hatası) olursa: Failure durumu ve genel hata mesajı ile LiveData'yı tetikle.
                 Log.e("CreateEventViewModel", "Etkinlik güncellenirken hata", e)
-                _operationStatus.value = false
+                _operationResult.value = OperationResult.Failure("Güncelleme sırasında bir hata oluştu.")
             }
         }
     }
+
 }
