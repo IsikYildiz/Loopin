@@ -26,6 +26,7 @@ import com.example.loopin.R
 import com.example.loopin.databinding.ActivityMainBinding
 import com.example.loopin.models.UpdateProfileRequest
 import com.example.loopin.network.ApiClient
+import com.example.loopin.ui.activities.notifications.NotificationsActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority

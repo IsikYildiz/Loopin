@@ -1,5 +1,4 @@
 package com.example.loopin.network.Api
-import com.example.loopin.models.DeleteNotificationRequest
 import com.example.loopin.models.DeleteNotificationResponse
 import com.example.loopin.models.MarkAsReadRequest
 import com.example.loopin.models.MarkAsReadResponse
@@ -12,7 +11,7 @@ interface NotificationApi {
     @GET("notifications/user/{userId}")
     suspend fun getUserNotifications(
         @Path("userId") userId: Int,
-        @Query("isRead") isRead: Boolean? = null,
+        @Query("isRead") isRead: Int? = null,
         @Query("type") type: String? = null,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
@@ -33,6 +32,6 @@ interface NotificationApi {
     @DELETE("notifications/{notificationId}")
     suspend fun deleteNotification(
         @Path("notificationId") notificationId: Int,
-        @Body request: DeleteNotificationRequest
+        @Path("notificationId") userId: Int,
     ): Response<DeleteNotificationResponse>
 }

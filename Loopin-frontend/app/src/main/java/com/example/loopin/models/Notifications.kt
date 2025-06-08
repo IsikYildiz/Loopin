@@ -12,7 +12,7 @@ data class Notification(
     val userId: Int,
     val type: String,
     val content: Map<String, Any>,
-    val isRead: Boolean,
+    val isRead: Int,
     val sentAt: String
 )
 
@@ -30,10 +30,6 @@ data class UnreadCountResponse(
     val success: Boolean,
     val unreadCount: Int,
     val error: String? = null
-)
-
-data class DeleteNotificationRequest(
-    val userId: Int
 )
 
 data class DeleteNotificationResponse(

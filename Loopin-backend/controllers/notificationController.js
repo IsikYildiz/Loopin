@@ -166,7 +166,7 @@ exports.getUnreadCount = async (req, res) => {
 // Bildirimi silme
 exports.deleteNotification = async (req, res) => {
   const notificationId = req.params.notificationId;
-  const { userId } = req.body;
+  const userId = req.params.userId;
 
   if (!userId) {
     return res.status(400).json({ success: false, message: 'User ID is required' });
