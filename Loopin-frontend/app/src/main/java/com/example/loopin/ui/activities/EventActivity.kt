@@ -8,10 +8,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.loopin.R
 import com.example.loopin.databinding.ActivityEventBinding
 import com.example.loopin.models.Event
 import com.example.loopin.ui.events.EventDetailViewModel
+import com.example.loopin.ui.events.ParticipantAdapter
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -21,6 +23,8 @@ class EventActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEventBinding
     private lateinit var viewModel: EventDetailViewModel
     private var currentEventId: Int = -1
+    private lateinit var participantAdapter: ParticipantAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_MyApp)
@@ -36,6 +40,7 @@ class EventActivity : AppCompatActivity() {
             showError("Etkinlik ID'si bulunamadı.")
         }
 
+        setupRecyclerView()
         observeViewModel()
     }
 
@@ -43,6 +48,7 @@ class EventActivity : AppCompatActivity() {
         super.onResume()
         if (currentEventId != -1) {
             viewModel.fetchEventDetails(currentEventId)
+            viewModel.fetchEventParticipants(currentEventId)
         }
     }
 
@@ -57,7 +63,29 @@ class EventActivity : AppCompatActivity() {
                 finish()
             }
         }
+
+        viewModel.participants.observe(this) { participants ->
+            participantAdapter.submitList(participants)
+        }
     }
+
+    private fun setupRecyclerView() {
+        participantAdapter = ParticipantAdapter { participant ->
+            // Katılımcıya tıklandığında ProfileActivity'i aç
+            val intent = Intent(this, ProfileActivity::class.java).apply {
+                // ProfileActivity, profili görüntülenecek kullanıcının ID'sini "USER_ID" key'i ile bekliyor
+                // Participant modelindeki `id` alanı, kullanıcının ID'sini temsil ediyor
+                putExtra("USER_ID", participant.id)
+            }
+            startActivity(intent)
+        }
+
+        binding.participantsRecyclerview.apply { // `activity_event.xml` dosyasındaki RecyclerView ID'si
+            adapter = participantAdapter
+            layoutManager = LinearLayoutManager(this@EventActivity)
+        }
+    }
+
 
     private fun updateUi(event: Event) {
         // XML'deki ilgili tüm alanları doldur

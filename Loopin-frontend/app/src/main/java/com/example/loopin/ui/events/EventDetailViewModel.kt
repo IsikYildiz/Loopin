@@ -10,12 +10,17 @@ import com.example.loopin.models.DeleteEventRequest
 import com.example.loopin.models.Event
 import com.example.loopin.network.ApiClient
 import kotlinx.coroutines.launch
+import com.example.loopin.models.Participant
 
 class EventDetailViewModel : ViewModel() {
 
     // Detayları gelen etkinliği tutacak LiveData
     private val _event = MutableLiveData<Event?>()
     val event: LiveData<Event?> = _event
+
+    // Katılımcı listesini tutacak LiveData
+    private val _participants = MutableLiveData<List<Participant>>()
+    val participants: LiveData<List<Participant>> = _participants
 
     // Silme işleminin sonucunu bildirecek LiveData
     private val _eventDeletedStatus = MutableLiveData<Boolean>()
@@ -38,6 +43,27 @@ class EventDetailViewModel : ViewModel() {
             }
         }
     }
+
+    // Verilen etkinlik ID'si ile katılımcıları API'den çeker
+    fun fetchEventParticipants(eventId: Int) {
+        viewModelScope.launch {
+            try {
+                // Not: API client'ınızda getEventParticipants(eventId) şeklinde bir endpoint'iniz olduğunu varsayıyoruz.
+                // Bu endpoint'in dönüş tipi EventParticipantsResponse olmalıdır.
+                val response = ApiClient.eventApi.getEventParticipants(eventId)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _participants.value = response.body()?.participants ?: emptyList()
+                } else {
+                    _participants.value = emptyList() // Hata durumunda boş liste bas
+                    Log.e("EventDetailViewModel", "Katılımcılar çekilemedi: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                _participants.value = emptyList()
+                Log.e("EventDetailViewModel", "Katılımcılar çekilirken istisna oluştu", e)
+            }
+        }
+    }
+
 
     // Verilen ID ile etkinliği silmek için API'ye istek atar
     fun deleteEvent(eventId: Int) {
