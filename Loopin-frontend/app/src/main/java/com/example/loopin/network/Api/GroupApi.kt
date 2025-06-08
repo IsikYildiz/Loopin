@@ -30,10 +30,11 @@ interface GroupApi {
         @Body request: UpdateGroupRequest
     ): Response<UpdateGroupResponse>
 
-    @DELETE("groups/{groupId}")
+    // HATAYI DÜZELTEN KISIM: @DELETE yerine @HTTP kullanıyoruz ve hasBody = true diyoruz
+    @HTTP(method = "DELETE", path = "groups/{groupId}", hasBody = true)
     suspend fun deleteGroup(
         @Path("groupId") groupId: Int,
-        @Body request: DeleteGroupRequest
+        @Body request: DeleteGroupRequest // Şimdi @Body kullanabiliriz
     ): Response<DeleteGroupResponse>
 
     @GET("groups/{groupId}")
@@ -52,7 +53,7 @@ interface GroupApi {
         @Body request: AddGroupMemberRequest
     ): Response<AddGroupMemberResponse>
 
-    @DELETE("groups/{groupId}/members")
+    @HTTP(method = "DELETE", path = "groups/{groupId}/members", hasBody = true)
     suspend fun removeGroupMember(
         @Path("groupId") groupId: Int,
         @Body request: RemoveGroupMemberRequest

@@ -1,7 +1,11 @@
 package com.example.loopin.ui.chats
 
+import com.example.loopin.R
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.loopin.PreferenceManager
 import com.example.loopin.databinding.ActivityChatMessageBinding
 import com.example.loopin.databinding.ItemMessageBinding
-// Make sure these imports are correct if you moved Message and GroupMessage
 import com.example.loopin.models.BaseMessage // Import BaseMessage
 import com.example.loopin.models.SendGroupMessageRequest
 import com.example.loopin.models.SendMessageRequest
@@ -28,8 +31,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import android.view.View
+import android.widget.Toast
 import com.example.loopin.databinding.ItemMessageReceivedBinding
 import com.example.loopin.databinding.ItemMessageSentBinding
+import com.example.loopin.models.DeleteChatRequest
+import com.example.loopin.models.DeleteGroupRequest
+import com.example.loopin.newchat.GroupMembersActivity
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -38,23 +45,93 @@ class ChatMessageActivity : AppCompatActivity() {
     private val viewModel: ChatMessageViewModel by viewModels()
     private lateinit var adapter: MessageAdapter
 
+    private var currentChatId: Int = -1
+    private var currentGroupId: Int = -1
+    private var isGroupChat: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChatMessageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar) // Toolbar'ı ayarla
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbar.setNavigationOnClickListener { onBackPressed() }
+
+        currentChatId = intent.getIntExtra("chatId", -1)
+        currentGroupId = intent.getIntExtra("groupId", -1)
+        val chatTitle = intent.getStringExtra("chatTitle") ?: "Sohbet"
+
+        supportActionBar?.title = chatTitle // Toolbar başlığını ayarla
+
+        if (currentChatId != -1) {
+            isGroupChat = false
+            viewModel.loadChatMessages(currentChatId)
+        } else if (currentGroupId != -1) {
+            isGroupChat = true
+            viewModel.loadGroupMessages(currentGroupId)
+        }
+
         setupRecyclerView()
         setupListeners()
+    }
 
-        val chatId = intent.getIntExtra("chatId", -1)
-        val groupId = intent.getIntExtra("groupId", -1)
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.chat_message_menu, menu)
+        val deleteChatItem = menu?.findItem(R.id.action_delete_chat)
+        val groupMembersItem = menu?.findItem(R.id.action_group_members)
+        val deleteGroupItem = menu?.findItem(R.id.action_delete_group) // Yeni menü öğesi
 
-        if (chatId != -1) {
-            viewModel.loadChatMessages(chatId)
-        } else if (groupId != -1) {
-            viewModel.loadGroupMessages(groupId)
+        if (isGroupChat) {
+            deleteChatItem?.isVisible = false // Birebir sohbeti sil seçeneği görünmez
+            groupMembersItem?.isVisible = true // Grup üyeleri seçeneği görünür
+            deleteGroupItem?.isVisible = false // Başlangıçta gizli, rol kontrolü ile açılacak
+
+            // Grup oluşturucusu ise grup silme seçeneğini göster
+            lifecycleScope.launch {
+                viewModel.isGroupCreator.collectLatest { isCreator ->
+                    deleteGroupItem?.isVisible = isCreator
+                }
+            }
+            // Grup bilgilerini yükleyelim
+            if (currentGroupId != -1) {
+                viewModel.loadGroupInfo(currentGroupId)
+            }
+
+        } else {
+            deleteChatItem?.isVisible = true // Birebir sohbeti sil seçeneği görünür
+            groupMembersItem?.isVisible = false // Grup üyeleri seçeneği görünmez
+            deleteGroupItem?.isVisible = false // Grup silme seçeneği görünmez
         }
-        val chatTitle = intent.getStringExtra("chatTitle") ?: "Chat"
+        return true
+    }
+
+    // Menü öğesi seçildiğinde
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_delete_chat -> {
+                if (!isGroupChat && currentChatId != -1) {
+                    viewModel.deleteChat(currentChatId)
+                }
+                true
+            }
+            R.id.action_group_members -> {
+                if (isGroupChat && currentGroupId != -1) {
+                    val intent = Intent(this, GroupMembersActivity::class.java).apply {
+                        putExtra("groupId", currentGroupId)
+                    }
+                    startActivity(intent)
+                }
+                true
+            }
+            R.id.action_delete_group -> { // Yeni grup silme menü öğesi
+                if (isGroupChat && currentGroupId != -1) {
+                    viewModel.deleteGroup(currentGroupId)
+                }
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -64,11 +141,37 @@ class ChatMessageActivity : AppCompatActivity() {
             adapter = this@ChatMessageActivity.adapter
         }
 
+        lifecycleScope.launch {
+            viewModel.groupDeletionStatus.collectLatest { isSuccess ->
+                if (isSuccess == true) {
+                    Toast.makeText(this@ChatMessageActivity, "Group Deleted Succesfully", Toast.LENGTH_SHORT).show()
+                    finish() // Aktiviteyi kapat
+                    viewModel.resetGroupDeletionStatus()
+                } else if (isSuccess == false) {
+                    Toast.makeText(this@ChatMessageActivity, "Group couldn't deleted", Toast.LENGTH_SHORT).show()
+                    viewModel.resetGroupDeletionStatus()
+                }
+            }
+        }
+
         lifecycleScope.launchWhenStarted {
             viewModel.messages.collectLatest { messages ->
                 adapter.submitList(messages)
                 if (messages.isNotEmpty()) {
                     binding.recyclerView.scrollToPosition(messages.size - 1)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.chatDeletionStatus.collectLatest { isSuccess ->
+                if (isSuccess == true) {
+                    Toast.makeText(this@ChatMessageActivity, "Sohbet başarıyla silindi.", Toast.LENGTH_SHORT).show()
+                    finish() // Aktiviteyi kapat
+                    viewModel.resetChatDeletionStatus()
+                } else if (isSuccess == false) {
+                    Toast.makeText(this@ChatMessageActivity, "Sohbet silinemedi.", Toast.LENGTH_SHORT).show()
+                    viewModel.resetChatDeletionStatus()
                 }
             }
         }
@@ -90,11 +193,71 @@ class ChatMessageViewModel @Inject constructor(
     private val apiClient: ApiClient
 ) : ViewModel() {
 
+    private val _groupDeletionStatus = MutableStateFlow<Boolean?>(null)
+    val groupDeletionStatus: StateFlow<Boolean?> = _groupDeletionStatus.asStateFlow()
+
+    private val _isGroupCreator = MutableStateFlow<Boolean>(false)
+    val isGroupCreator: StateFlow<Boolean> = _isGroupCreator.asStateFlow()
+
     private val _messages = MutableStateFlow<List<BaseMessage>>(emptyList())
     val messages: StateFlow<List<BaseMessage>> = _messages.asStateFlow()
 
+    private val _chatDeletionStatus = MutableStateFlow<Boolean?>(null) // null: bekliyor, true: başarılı, false: başarısız
+    val chatDeletionStatus: StateFlow<Boolean?> = _chatDeletionStatus.asStateFlow()
+
     private var currentChatId: Int = -1
     private var currentGroupId: Int = -1
+
+    fun loadGroupInfo(groupId: Int) {
+        viewModelScope.launch {
+            try {
+                val userId = PreferenceManager.getUserId()
+                if (userId == null) return@launch
+
+                val response = apiClient.groupApi.getGroupById(groupId)
+                if (response.isSuccessful) {
+                    val group = response.body()?.group
+                    if (group != null) {
+                        _isGroupCreator.value = (group.createdBy == userId)
+                    }
+                } else {
+                    println("Error loading group info: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                println("Exception loading group info: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun deleteGroup(groupId: Int) {
+        viewModelScope.launch {
+            val userId = PreferenceManager.getUserId()
+            if (userId == null) {
+                println("Error: User ID not found for deleting group.")
+                _groupDeletionStatus.value = false
+                return@launch
+            }
+            try {
+                val request = DeleteGroupRequest(userId = userId) // DeleteGroupRequest modelini kullanıyoruz
+                val response = apiClient.groupApi.deleteGroup(groupId, request)
+                if (response.isSuccessful) {
+                    _groupDeletionStatus.value = true
+                } else {
+                    println("Error deleting group: ${response.code()}")
+                    _groupDeletionStatus.value = false
+                }
+            } catch (e: Exception) {
+                println("Exception deleting group: ${e.message}")
+                e.printStackTrace()
+                _groupDeletionStatus.value = false
+            }
+        }
+    }
+
+    fun resetGroupDeletionStatus() {
+        _groupDeletionStatus.value = null
+    }
 
     fun loadChatMessages(chatId: Int) {
         currentChatId = chatId
@@ -146,7 +309,7 @@ class ChatMessageViewModel @Inject constructor(
                     )
                     val response = apiClient.chatApi.sendMessage(currentChatId, request)
                     if (response.isSuccessful) {
-                        loadChatMessages(currentChatId) // Refresh messages after sending
+                        loadChatMessages(currentChatId)
                     } else {
                         println("Error sending chat message: ${response.code()}")
                     }
@@ -157,7 +320,7 @@ class ChatMessageViewModel @Inject constructor(
                     )
                     val response = apiClient.groupApi.sendGroupMessage(currentGroupId, request)
                     if (response.isSuccessful) {
-                        loadGroupMessages(currentGroupId) // Refresh messages after sending
+                        loadGroupMessages(currentGroupId)
                     } else {
                         println("Error sending group message: ${response.code()}")
                     }
@@ -167,6 +330,35 @@ class ChatMessageViewModel @Inject constructor(
                 e.printStackTrace()
             }
         }
+    }
+
+    fun deleteChat(chatId: Int) {
+        viewModelScope.launch {
+            val userId = PreferenceManager.getUserId()
+            if (userId == null) {
+                println("Error: User ID not found for deleting chat.")
+                _chatDeletionStatus.value = false
+                return@launch
+            }
+            try {
+                val request = DeleteChatRequest(userId = userId) // DeleteChatRequest modelini kullanıyoruz
+                val response = apiClient.chatApi.deleteChat(chatId, request)
+                if (response.isSuccessful) {
+                    _chatDeletionStatus.value = true
+                } else {
+                    println("Error deleting chat: ${response.code()}")
+                    _chatDeletionStatus.value = false
+                }
+            } catch (e: Exception) {
+                println("Exception deleting chat: ${e.message}")
+                e.printStackTrace()
+                _chatDeletionStatus.value = false
+            }
+        }
+    }
+
+    fun resetChatDeletionStatus() {
+        _chatDeletionStatus.value = null
     }
 }
 

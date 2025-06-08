@@ -16,6 +16,7 @@ import com.example.loopin.databinding.FragmentChatsBinding
 import com.example.loopin.ui.chats.adapter.AllChatsAdapter // Import new adapter
 import com.example.loopin.ui.chats.adapter.ChatAdapter
 import com.example.loopin.ui.chats.adapter.GroupAdapter
+import com.example.loopin.newchat.CreateNewChatActivity
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -44,6 +45,12 @@ class ChatsFragment : Fragment() {
         setupFab()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Fragment tekrar görünür olduğunda grup listesini yenile
+        viewModel.refreshChats()
+    }
+
     private fun setupViewPager() {
         binding.viewPager.adapter = ChatsPagerAdapter(this)
 
@@ -58,12 +65,9 @@ class ChatsFragment : Fragment() {
 
     private fun setupFab() {
         binding.fabNewChat.setOnClickListener {
-            // This FAB should ideally lead to a screen to select a contact
-            // for a new individual chat or to create a new group.
-            // For now, I'm removing the incorrect adapter assignments.
-            // Example: Start an activity to select a user to chat with
-            // val intent = Intent(requireContext(), NewChatSelectionActivity::class.java)
-            // startActivity(intent)
+            // Yeni oluşturduğumuz CreateNewChatActivity'yi başlat
+            val intent = Intent(requireContext(), CreateNewChatActivity::class.java)
+            startActivity(intent)
         }
     }
 

@@ -43,6 +43,14 @@
         <activity android:name=".ui.activities.notifications.NotificationsActivity" />
         <activity android:name=".ui.activities.EventActivity"/>
         <activity android:name=".ui.events.MapActivity"/>
+        <activity android:name=".newchat.AddGroupMembersActivity"
+            android:theme="@style/Theme.MyApp" />
+        <activity android:name=".newchat.GroupMembersActivity"
+            android:theme="@style/Theme.MyApp" />
+        <activity android:name=".newchat.CreateNewChatActivity"
+            android:theme="@style/Theme.MyApp" />
+        <activity android:name=".newchat.CreateGroupActivity"
+            android:theme="@style/Theme.MyApp" />
         <activity
             android:name=".ui.chats.ChatMessageActivity"
             android:theme="@style/Theme.MyApp" />
