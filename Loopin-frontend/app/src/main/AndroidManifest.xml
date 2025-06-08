@@ -43,13 +43,12 @@
         <activity android:name=".ui.activities.notifications.NotificationsActivity" />
         <activity android:name=".ui.activities.EventActivity"/>
         <activity android:name=".ui.events.MapActivity"/>
+        <activity
+            android:name=".ui.chats.ChatMessageActivity"
+            android:theme="@style/Theme.MyApp" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${GOOGLE_MAPS_API_KEY}"/>
-        <activity
-            android:name=".ui.activities.GroupChatActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MyApp" />
 
     </application>
 

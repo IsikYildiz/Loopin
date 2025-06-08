@@ -120,14 +120,15 @@ data class GroupMessagesResponse(
     val error: String? = null
 )
 
+// Modified GroupMessage to implement BaseMessage
 data class GroupMessage(
-    val messageId: Int,
-    val senderId: Int,
-    val content: String,
-    val sentAt: String,
-    val senderName: String,
-    val senderImage: String? = null
-)
+    override val messageId: Int, // Added override
+    override val senderId: Int, // Added override
+    override val content: String, // Added override
+    override val sentAt: String, // Added override
+    override val senderName: String, // Added override
+    override val senderImage: String? = null // Added override
+) : BaseMessage // Implement the interface
 
 data class SendGroupMessageRequest(
     val senderId: Int,

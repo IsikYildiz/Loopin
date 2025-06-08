@@ -1,83 +1,195 @@
 package com.example.loopin.ui.chats
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.example.loopin.PreferenceManager // Assuming PreferenceManager exists
+import com.example.loopin.R
 import com.example.loopin.databinding.FragmentChatsBinding
-import com.example.loopin.ui.activities.EXTRA_GROUP_ID
-import com.example.loopin.ui.activities.EXTRA_GROUP_NAME
-import com.example.loopin.ui.activities.GroupChatActivity
-import com.google.android.material.snackbar.Snackbar
+import com.example.loopin.ui.chats.adapter.AllChatsAdapter // Import new adapter
+import com.example.loopin.ui.chats.adapter.ChatAdapter
+import com.example.loopin.ui.chats.adapter.GroupAdapter
+import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ChatsFragment : Fragment() {
 
     private var _binding: FragmentChatsBinding? = null
     private val binding get() = _binding!!
-
-    private lateinit var chatsViewModel: ChatsViewModel
-    private lateinit var groupAdapter: GroupAdapter
+    private val viewModel: ChatsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        chatsViewModel = ViewModelProvider(this).get(ChatsViewModel::class.java)
         _binding = FragmentChatsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        observeViewModel()
 
-        // Veri yükleme işlemini SADECE view oluşturulduğunda bir kereliğine tetikle.
-        // ViewModel veriyi zaten hafızasında tutacaktır.
-        chatsViewModel.fetchUserGroups()
-
+        setupViewPager()
+        setupFab()
     }
 
-    private fun setupRecyclerView() {
-        groupAdapter = GroupAdapter { group ->
-            val intent = android.content.Intent(requireActivity(), GroupChatActivity::class.java).apply {
-                putExtra(EXTRA_GROUP_ID, group.groupId)
-                putExtra(EXTRA_GROUP_NAME, group.groupName)
+    private fun setupViewPager() {
+        binding.viewPager.adapter = ChatsPagerAdapter(this)
+
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            tab.text = when (position) {
+                0 -> "Tümü"
+                1 -> "Birebir"
+                else -> "Gruplar"
             }
-            startActivity(intent)
-        }
-        binding.recyclerViewGroups.apply {
-            adapter = groupAdapter
-            layoutManager = LinearLayoutManager(requireContext())
-        }
+        }.attach()
     }
 
-    private fun observeViewModel() {
-        chatsViewModel.groups.observe(viewLifecycleOwner) { groups ->
-            groupAdapter.submitList(groups)
-            binding.textViewNoGroups.isVisible = groups.isEmpty()
-        }
-
-        chatsViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBarGroups.isVisible = isLoading
-        }
-
-        chatsViewModel.error.observe(viewLifecycleOwner) { error ->
-            error?.let {
-                Snackbar.make(requireView(), it, Snackbar.LENGTH_LONG).show()
-            }
+    private fun setupFab() {
+        binding.fabNewChat.setOnClickListener {
+            // This FAB should ideally lead to a screen to select a contact
+            // for a new individual chat or to create a new group.
+            // For now, I'm removing the incorrect adapter assignments.
+            // Example: Start an activity to select a user to chat with
+            // val intent = Intent(requireContext(), NewChatSelectionActivity::class.java)
+            // startActivity(intent)
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Binding referansını temizle
-        binding.recyclerViewGroups.adapter = null
         _binding = null
+    }
+
+    private inner class ChatsPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+        override fun getItemCount(): Int = 3
+
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> AllChatsFragment()
+                1 -> IndividualChatsFragment()
+                else -> GroupChatsFragment()
+            }
+        }
+    }
+}
+
+@AndroidEntryPoint
+class AllChatsFragment : Fragment() {
+    private val viewModel: ChatsViewModel by viewModels({ requireParentFragment() })
+    private lateinit var adapter: AllChatsAdapter // Use AllChatsAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_chat_list, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val currentUserId = PreferenceManager.getUserId() ?: -1 // Get current user ID
+        adapter = AllChatsAdapter(onItemClick = { chatListItem ->
+            val intent = Intent(requireContext(), ChatMessageActivity::class.java).apply {
+                when (chatListItem) {
+                    is AllChatInfoItem -> putExtra("chatId", chatListItem.chat.chatId) // Access actual ChatInfo from wrapper
+                    is AllGroupInfoItem -> putExtra("groupId", chatListItem.group.groupId) // Access actual GroupInfo from wrapper
+                }
+            }
+            startActivity(intent)
+        }, currentUserId = currentUserId)
+
+        val recyclerView = view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.allChats.collectLatest { chats ->
+                adapter.submitList(chats)
+            }
+        }
+    }
+}
+
+@AndroidEntryPoint
+class IndividualChatsFragment : Fragment() {
+    private val viewModel: ChatsViewModel by viewModels({ requireParentFragment() })
+    private lateinit var adapter: ChatAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_chat_list, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        adapter = ChatAdapter { chat ->
+            val intent = Intent(requireContext(), ChatMessageActivity::class.java).apply {
+                putExtra("chatId", chat.chatId)
+            }
+            startActivity(intent)
+        }
+
+        val recyclerView = view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.individualChats.collectLatest { chats ->
+                adapter.submitList(chats)
+            }
+        }
+    }
+}
+
+@AndroidEntryPoint
+class GroupChatsFragment : Fragment() {
+    private val viewModel: ChatsViewModel by viewModels({ requireParentFragment() })
+    private lateinit var adapter: GroupAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_chat_list, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        adapter = GroupAdapter { group ->
+            val intent = Intent(requireContext(), ChatMessageActivity::class.java).apply {
+                putExtra("groupId", group.groupId)
+            }
+            startActivity(intent)
+        }
+
+        val recyclerView = view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.groupChats.collectLatest { groups ->
+                adapter.submitList(groups)
+            }
+        }
     }
 }

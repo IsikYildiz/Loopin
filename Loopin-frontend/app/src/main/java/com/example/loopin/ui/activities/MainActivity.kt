@@ -32,6 +32,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.IOException // Geocoder için
 import java.util.Locale // Geocoder için
@@ -39,6 +40,7 @@ import java.util.Locale // Geocoder için
 /*Uygulamanın en önemli kısmı; home, chats, events ve calendar fragmentlerini içerir.
 Aynı zamanda sayfanın üstündeki toolbardan, profil ve bildirim aktivitelerine gidilir ve
 arama çubuğu ile profiller ya da etkinlikler aranabilir.*/
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding

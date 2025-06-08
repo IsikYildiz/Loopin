@@ -29,4 +29,16 @@
             android:textSize="16sp"
             tools:text="Merhaba, bu benim gönderdiğim bir test mesajıdır." />
     </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/text_message_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="10sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginEnd="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/card_message_body"
+        app:layout_constraintEnd_toStartOf="@+id/card_message_body"
+        tools:text="14:30" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
