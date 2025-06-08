@@ -46,6 +46,7 @@ interface EventApi {
 
     @GET("events/public")
     suspend fun getPublicEvents(
+        @Query("userId") userId: Int,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Response<EventListResponse>

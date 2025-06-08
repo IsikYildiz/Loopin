@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.loopin.PreferenceManager
 import com.example.loopin.models.Event
 import com.example.loopin.network.ApiClient
 import kotlinx.coroutines.launch
@@ -29,12 +30,15 @@ class HomeViewModel : ViewModel() {
             _isLoading.value = true // Yükleme başladı
             _error.value = null   // Eski hataları temizle
             try {
-                val response = ApiClient.eventApi.getPublicEvents()
-                if (response.isSuccessful && response.body() != null) {
-                     _events.value = response.body()!!.events
-                } else {
-                    _error.value = "Etkinlikler yüklenemedi."
-                    Log.e("HomeViewModel", "Error fetching events: ${response.errorBody()?.string()}")
+                val userId = PreferenceManager.getUserId()
+                val response = userId?.let { ApiClient.eventApi.getPublicEvents(it) }
+                if (response != null) {
+                    if (response.isSuccessful && response.body() != null) {
+                        _events.value = response.body()!!.events
+                    } else {
+                        _error.value = "Etkinlikler yüklenemedi."
+                        Log.e("HomeViewModel", "Error fetching events: ${response.errorBody()?.string()}")
+                    }
                 }
             } catch (e: Exception) {
                 _error.value = "Bir ağ hatası oluştu."
