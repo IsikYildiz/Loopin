@@ -505,18 +505,20 @@ exports.getEventParticipants = async (req, res) => {
 
   try {
     const [participants] = await pool.query(
-      `SELECT u.id, u.name, ep.status, ep.joinedAt
+      `SELECT u.userId AS id, u.fullName AS name, ep.status, ep.joinedAt
        FROM eventParticipants ep
-       JOIN users u ON ep.userId = u.userId
+       JOIN Users u ON ep.userId = u.userId
        WHERE ep.eventId = ?`,
       [eventId]
     );
 
     res.json({ success: true, participants });
   } catch (err) {
+    console.error(`Error fetching participants for event ${eventId}:`, err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Etkinlik katılımcı sayısını alma
 exports.getEventParticipantCount = async (req, res) => {
