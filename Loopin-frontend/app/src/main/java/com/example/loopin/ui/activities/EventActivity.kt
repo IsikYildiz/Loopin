@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.loopin.R
 import com.example.loopin.databinding.ActivityEventBinding
 import com.example.loopin.models.Event
+import com.example.loopin.ui.events.ActionStatus
 import com.example.loopin.ui.events.EventDetailViewModel
 import com.example.loopin.ui.events.ParticipantAdapter
+import com.example.loopin.ui.events.UserEventStatus
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -47,14 +50,14 @@ class EventActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (currentEventId != -1) {
-            viewModel.fetchEventDetails(currentEventId)
-            viewModel.fetchEventParticipants(currentEventId)
+            // GÜNCELLENDİ: Artık tek bir yerden veri yüklüyoruz.
+            viewModel.loadEventData(currentEventId)
         }
     }
 
     private fun observeViewModel() {
         viewModel.event.observe(this) { event ->
-            event?.let { updateUi(it) } ?: showError("Etkinlik yüklenemedi veya bulunamadı.")
+            event?.let { updateUi(it) }
         }
 
         viewModel.eventDeletedStatus.observe(this) { isDeleted ->
@@ -67,20 +70,73 @@ class EventActivity : AppCompatActivity() {
         viewModel.participants.observe(this) { participants ->
             participantAdapter.submitList(participants)
         }
+
+        // YENİ: Kullanıcı durumunu gözlemle
+        viewModel.userStatus.observe(this) { status ->
+            // Menünün yeniden çizilmesini tetikle
+            invalidateOptionsMenu()
+
+            // Yükleme durumu için ProgressBar'ı yönet
+            binding.progressBar.visibility = if (status is UserEventStatus.Loading) View.VISIBLE else View.GONE
+
+            if (status is UserEventStatus.Error) {
+                showError(status.message)
+            }
+        }
+
+        // YENİ: Aksiyon durumunu gözlemle (Katıl/Ayrıl/Silme Hatası vb.)
+        viewModel.actionStatus.observe(this) { status ->
+            val message = when(status) {
+                is ActionStatus.Success -> status.message
+                is ActionStatus.Failure -> status.message
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // YENİ: Menüyü durum'a göre hazırlayan fonksiyon
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val status = viewModel.userStatus.value
+
+        val joinItem = menu?.findItem(R.id.action_join_event)
+        val leaveItem = menu?.findItem(R.id.action_leave_event)
+        val editItem = menu?.findItem(R.id.action_edit_event)
+        val deleteItem = menu?.findItem(R.id.action_delete_event)
+
+        // Önce hepsini gizle
+        joinItem?.isVisible = false
+        leaveItem?.isVisible = false
+        editItem?.isVisible = false
+        deleteItem?.isVisible = false
+
+        when (status) {
+            is UserEventStatus.Creator -> {
+                editItem?.isVisible = true
+                deleteItem?.isVisible = true
+            }
+            is UserEventStatus.Participant -> {
+                leaveItem?.isVisible = true
+            }
+            is UserEventStatus.NotParticipant -> {
+                joinItem?.isVisible = true
+            }
+            else -> {
+                // Loading veya Error durumunda hiçbir şey gösterme
+            }
+        }
+
+        return super.onPrepareOptionsMenu(menu)
     }
 
     private fun setupRecyclerView() {
         participantAdapter = ParticipantAdapter { participant ->
-            // Katılımcıya tıklandığında ProfileActivity'i aç
             val intent = Intent(this, ProfileActivity::class.java).apply {
-                // ProfileActivity, profili görüntülenecek kullanıcının ID'sini "USER_ID" key'i ile bekliyor
-                // Participant modelindeki `id` alanı, kullanıcının ID'sini temsil ediyor
                 putExtra("USER_ID", participant.id)
             }
             startActivity(intent)
         }
 
-        binding.participantsRecyclerview.apply { // `activity_event.xml` dosyasındaki RecyclerView ID'si
+        binding.participantsRecyclerview.apply {
             adapter = participantAdapter
             layoutManager = LinearLayoutManager(this@EventActivity)
         }
@@ -88,13 +144,11 @@ class EventActivity : AppCompatActivity() {
 
 
     private fun updateUi(event: Event) {
-        // XML'deki ilgili tüm alanları doldur
         supportActionBar?.title = event.eventName
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.eventTitleTextview.text = event.eventName
         binding.eventDescriptionTextview.text = event.description?.ifEmpty { "Açıklama belirtilmemiş." }
 
-        // Tarih/Saat formatlaması
         val apiDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
@@ -118,9 +172,6 @@ class EventActivity : AppCompatActivity() {
             "Saat Belirtilmemiş"
         }
         binding.eventLocationTextview.text = event.eventLocation?.ifEmpty { null } ?: "Konum Belirtilmemiş"
-
-        // Not: Katılımcılar için RecyclerView kurulumu burada yapılabilir.
-        // binding.participantsRecyclerview.adapter = ...
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -129,7 +180,20 @@ class EventActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // GÜNCELLENDİ: Yeni menü seçenekleri eklendi
         return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            R.id.action_join_event -> {
+                viewModel.joinEvent(currentEventId)
+                true
+            }
+            R.id.action_leave_event -> {
+                viewModel.leaveEvent(currentEventId)
+                true
+            }
             R.id.action_edit_event -> {
                 val intent = Intent(this, CreateEventActivity::class.java).apply {
                     putExtra("EDIT_EVENT_ID", currentEventId)
@@ -139,10 +203,6 @@ class EventActivity : AppCompatActivity() {
             }
             R.id.action_delete_event -> {
                 showDeleteConfirmationDialog()
-                true
-            }
-            android.R.id.home -> {
-                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)

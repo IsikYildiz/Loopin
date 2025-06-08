@@ -8,9 +8,26 @@ import androidx.lifecycle.viewModelScope
 import com.example.loopin.PreferenceManager
 import com.example.loopin.models.DeleteEventRequest
 import com.example.loopin.models.Event
+import com.example.loopin.models.JoinEventRequest
+import com.example.loopin.models.LeaveEventRequest
 import com.example.loopin.network.ApiClient
 import kotlinx.coroutines.launch
 import com.example.loopin.models.Participant
+
+// Kullanıcının etkinlikle olan ilişkisini temsil eden durumlar
+sealed class UserEventStatus {
+    object Loading : UserEventStatus()
+    object Creator : UserEventStatus()
+    object Participant : UserEventStatus()
+    object NotParticipant : UserEventStatus()
+    data class Error(val message: String) : UserEventStatus()
+}
+
+// Bir işlemin sonucunu (başarı/hata) bildirmek için kullanılacak sınıf
+sealed class ActionStatus {
+    data class Success(val message: String) : ActionStatus()
+    data class Failure(val message: String) : ActionStatus()
+}
 
 class EventDetailViewModel : ViewModel() {
 
@@ -26,46 +43,98 @@ class EventDetailViewModel : ViewModel() {
     private val _eventDeletedStatus = MutableLiveData<Boolean>()
     val eventDeletedStatus: LiveData<Boolean> = _eventDeletedStatus
 
-    // Verilen ID ile tek bir etkinliği API'den çeker
-    fun fetchEventDetails(eventId: Int) {
+    // YENİ: Kullanıcının etkinlikle olan durumunu tutacak LiveData
+    private val _userStatus = MutableLiveData<UserEventStatus>()
+    val userStatus: LiveData<UserEventStatus> = _userStatus
+
+    // YENİ: Katılma/Ayrılma gibi aksiyonların sonucunu bildirecek LiveData
+    private val _actionStatus = MutableLiveData<ActionStatus>()
+    val actionStatus: LiveData<ActionStatus> = _actionStatus
+
+
+    // YENİ ve GÜNCELLENMİŞ: Tüm etkinlik verilerini tek bir yerden yükleyen fonksiyon
+    fun loadEventData(eventId: Int) {
+        if (eventId == -1) {
+            _userStatus.value = UserEventStatus.Error("Geçersiz Etkinlik ID'si")
+            return
+        }
+
         viewModelScope.launch {
+            _userStatus.value = UserEventStatus.Loading
             try {
-                val response = ApiClient.eventApi.getEventById(eventId)
-                if (response.isSuccessful) {
-                    _event.value = response.body()?.event
+                val currentUserId = PreferenceManager.getUserId()
+                if (currentUserId == null || currentUserId == -1) {
+                    _userStatus.value = UserEventStatus.Error("Kullanıcı girişi bulunamadı.")
+                    return@launch
+                }
+
+                // Eş zamanlı olarak etkinlik detaylarını ve katılımcıları çek
+                val eventResponse = ApiClient.eventApi.getEventById(eventId)
+                val participantsResponse = ApiClient.eventApi.getEventParticipants(eventId)
+
+                if (eventResponse.isSuccessful && eventResponse.body() != null && participantsResponse.isSuccessful && participantsResponse.body() != null) {
+                    val eventData = eventResponse.body()!!.event
+                    val participantsData = participantsResponse.body()!!.participants
+
+                    _event.value = eventData
+                    _participants.value = participantsData
+
+                    // Kullanıcı durumunu belirle
+                    if (eventData?.creatorId == currentUserId) {
+                        _userStatus.value = UserEventStatus.Creator
+                    } else if (participantsData.any { it.id == currentUserId }) {
+                        _userStatus.value = UserEventStatus.Participant
+                    } else {
+                        _userStatus.value = UserEventStatus.NotParticipant
+                    }
                 } else {
-                    _event.value = null
-                    Log.e("EventDetailViewModel", "Detay çekilemedi: ${response.errorBody()?.string()}")
+                    _userStatus.value = UserEventStatus.Error("Etkinlik verileri alınamadı.")
+                    Log.e("EventDetailViewModel", "API Error: Event - ${eventResponse.errorBody()?.string()}, Participants - ${participantsResponse.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                _event.value = null
-                Log.e("EventDetailViewModel", "Detay çekilirken istisna oluştu", e)
+                _userStatus.value = UserEventStatus.Error("Bir ağ hatası oluştu.")
+                Log.e("EventDetailViewModel", "Exception in loadEventData", e)
             }
         }
     }
 
-    // Verilen etkinlik ID'si ile katılımcıları API'den çeker
-    fun fetchEventParticipants(eventId: Int) {
+    fun joinEvent(eventId: Int) {
+        val userId = PreferenceManager.getUserId() ?: return
         viewModelScope.launch {
             try {
-                // Not: API client'ınızda getEventParticipants(eventId) şeklinde bir endpoint'iniz olduğunu varsayıyoruz.
-                // Bu endpoint'in dönüş tipi EventParticipantsResponse olmalıdır.
-                val response = ApiClient.eventApi.getEventParticipants(eventId)
+                val request = JoinEventRequest(eventId, userId)
+                val response = ApiClient.eventApi.joinEvent(request)
                 if (response.isSuccessful && response.body()?.success == true) {
-                    _participants.value = response.body()?.participants ?: emptyList()
+                    _actionStatus.value = ActionStatus.Success("Etkinliğe katıldınız!")
+                    loadEventData(eventId) // Durumu yenile
                 } else {
-                    _participants.value = emptyList() // Hata durumunda boş liste bas
-                    Log.e("EventDetailViewModel", "Katılımcılar çekilemedi: ${response.errorBody()?.string()}")
+                    _actionStatus.value = ActionStatus.Failure(response.body()?.error ?: "Katılma başarısız.")
                 }
             } catch (e: Exception) {
-                _participants.value = emptyList()
-                Log.e("EventDetailViewModel", "Katılımcılar çekilirken istisna oluştu", e)
+                _actionStatus.value = ActionStatus.Failure("Bir hata oluştu.")
+            }
+        }
+    }
+
+    fun leaveEvent(eventId: Int) {
+        val userId = PreferenceManager.getUserId() ?: return
+        viewModelScope.launch {
+            try {
+                val request = LeaveEventRequest(eventId, userId)
+                val response = ApiClient.eventApi.leaveEvent(request)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _actionStatus.value = ActionStatus.Success("Etkinlikten ayrıldınız.")
+                    loadEventData(eventId) // Durumu yenile
+                } else {
+                    _actionStatus.value = ActionStatus.Failure(response.body()?.error ?: "Ayrılma başarısız.")
+                }
+            } catch (e: Exception) {
+                _actionStatus.value = ActionStatus.Failure("Bir hata oluştu.")
             }
         }
     }
 
 
-    // Verilen ID ile etkinliği silmek için API'ye istek atar
     fun deleteEvent(eventId: Int) {
         val userId = PreferenceManager.getUserId()
         if (userId == null || userId == -1) {
@@ -76,8 +145,6 @@ class EventDetailViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // API, silme işlemi için de kimin istek attığını bilmek isteyebilir.
-                // Bu yüzden bir DeleteEventRequest oluşturuyoruz.
                 val request = DeleteEventRequest(userId = userId)
                 val response = ApiClient.eventApi.deleteEvent(eventId, request)
 
@@ -85,10 +152,12 @@ class EventDetailViewModel : ViewModel() {
                     _eventDeletedStatus.value = true
                 } else {
                     _eventDeletedStatus.value = false
+                    _actionStatus.value = ActionStatus.Failure(response.body()?.error ?: "Silme başarısız oldu.")
                     Log.e("EventDetailViewModel", "Silme başarısız: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 _eventDeletedStatus.value = false
+                _actionStatus.value = ActionStatus.Failure("Silme sırasında bir hata oluştu.")
                 Log.e("EventDetailViewModel", "Silme sırasında istisna oluştu", e)
             }
         }
