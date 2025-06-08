@@ -207,27 +207,62 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-// Public etkinlikleri listeleme
+// Public etkinlikleri listeleme (kullanıcının katıldıkları hariç)
 exports.getPublicEvents = async (req, res) => {
-  const page   = parseInt(req.query.page) || 1;
-  const limit  = parseInt(req.query.limit) || 10;
+  // 1. Adım: İstekten page, limit ve opsiyonel olarak userId'yi al
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const userId = req.query.userId; // userId, string olarak gelebilir
   const offset = (page - 1) * limit;
 
-  try {
-    const [rows] = await pool.query(
-      `SELECT * 
-       FROM events 
-       WHERE isPrivate = 0 AND endTime >= NOW() 
-       ORDER BY createdAt DESC 
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
+  // Temel sorgu ve parametreleri hazırla
+  let mainQuery = '';
+  let countQuery = '';
+  let queryParams = [];
 
-    const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) AS total 
-       FROM events 
-       WHERE isPrivate = 0 AND endTime >= NOW()`
-    );
+  // 2. Adım: userId varsa sorguyu ve parametreleri değiştir
+  if (userId) {
+    // Kullanıcının katılmadığı etkinlikleri bulmak için LEFT JOIN kullan
+    // Bir etkinliğin karşılığında ep.userId null ise, kullanıcı o etkinliğe katılmamıştır.
+    mainQuery = `
+      SELECT e.*
+      FROM events e
+      LEFT JOIN eventparticipants ep ON e.eventId = ep.eventId AND ep.userId = ?
+      WHERE e.isPrivate = 0 AND e.endTime >= NOW() AND ep.userId IS NULL
+      ORDER BY e.createdAt DESC
+      LIMIT ? OFFSET ?
+    `;
+    countQuery = `
+      SELECT COUNT(*) AS total
+      FROM events e
+      LEFT JOIN eventparticipants ep ON e.eventId = ep.eventId AND ep.userId = ?
+      WHERE e.isPrivate = 0 AND e.endTime >= NOW() AND ep.userId IS NULL
+    `;
+    // Parametre dizisine userId'yi başa ekle
+    queryParams = [parseInt(userId, 10)];
+
+  } else {
+    // userId yoksa (örneğin kullanıcı giriş yapmamışsa), orijinal sorguyu kullan
+    mainQuery = `
+      SELECT *
+       FROM events
+       WHERE isPrivate = 0 AND endTime >= NOW()
+       ORDER BY createdAt DESC
+       LIMIT ? OFFSET ?
+    `;
+    countQuery = `
+      SELECT COUNT(*) AS total
+       FROM events
+       WHERE isPrivate = 0 AND endTime >= NOW()
+    `;
+  }
+
+  try {
+    // Etkinlikleri al
+    const [rows] = await pool.query(mainQuery, [...queryParams, limit, offset]);
+
+    // Toplam sayıyı al
+    const [[{ total }]] = await pool.query(countQuery, queryParams);
 
     res.json({
       success: true,

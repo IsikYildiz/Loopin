@@ -15,6 +15,6 @@ router.put('/read-all', notificationController.markAllAsRead);
 router.get('/user/:userId/unread-count', notificationController.getUnreadCount);
 
 // Bildirimi silme
-router.delete('/:notificationId', notificationController.deleteNotification);
+router.delete('/:userId/:notificationId', notificationController.deleteNotification);
 
 module.exports = router;

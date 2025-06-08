@@ -29,9 +29,9 @@ interface NotificationApi {
     @GET("notifications/user/{userId}/unread-count")
     suspend fun getUnreadCount(@Path("userId") userId: Int): Response<UnreadCountResponse>
 
-    @DELETE("notifications/{notificationId}")
+    @DELETE("notifications/{userId}/{notificationId}")
     suspend fun deleteNotification(
-        @Path("notificationId") notificationId: Int,
-        @Path("notificationId") userId: Int,
+        @Path("userId") userId: Int,
+        @Path("notificationId") notificationId: Int
     ): Response<DeleteNotificationResponse>
 }
