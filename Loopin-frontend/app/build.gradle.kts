@@ -50,7 +50,6 @@ android {
         dataBinding = true
     }
 }
-
 dependencies {
 
     implementation(libs.androidx.core.ktx)

@@ -94,14 +94,16 @@ class FriendsActivity: AppCompatActivity() {
 
     private fun removeFriend(friendId: Int) {
         lifecycleScope.launch {
-            val request = FriendRequest(senderId = currentUserId, receiverId = friendId) // Backend 'userId', 'friendId' beklese de modelimiz bu şekilde
+            val userId = PreferenceManager.getUserId()
             try {
-                val response = ApiClient.friendApi.removeFriend(request)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    Toast.makeText(this@FriendsActivity, "Friend removed.", Toast.LENGTH_SHORT).show()
-                    loadData() // Listeyi yenile
-                } else {
-                    Toast.makeText(this@FriendsActivity, "Failed to remove friend.", Toast.LENGTH_SHORT).show()
+                val response = userId?.let { ApiClient.friendApi.removeFriend(it,friendId) }
+                if (response != null) {
+                    if (response.isSuccessful && response!!.body()?.success == true) {
+                        Toast.makeText(this@FriendsActivity, "Friend removed.", Toast.LENGTH_SHORT).show()
+                        loadData() // Listeyi yenile
+                    } else {
+                        Toast.makeText(this@FriendsActivity, "Failed to remove friend.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@FriendsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()

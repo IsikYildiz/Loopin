@@ -36,10 +36,10 @@ interface ChatApi {
         @Body request: SendMessageRequest
     ): Response<SendMessageResponse>
 
-    @DELETE("chats/{chatId}")
+    @DELETE("chats/{userId}/{chatId}")
     suspend fun deleteChat(
         @Path("chatId") chatId: Int,
-        @Body request: DeleteChatRequest
+        @Path("userId") userId: Int,
     ): Response<DeleteChatResponse>
 
     @DELETE("chats/{chatId}/messages/{messageId}")

@@ -275,7 +275,7 @@ exports.addGroupMember = async (req, res) => {
       await notificationController.createNotification(
         userId, 
         'group_join', 
-        { groupId, addedBy: requesterId, message: 'You have been added to a group.' }
+        { groupId, type: "event_add", message: 'You have been added to a group.' }
       );
     } catch (error) {
       console.error('Bildirim oluşturulurken hata:', error);
@@ -342,7 +342,7 @@ exports.removeGroupMember = async (req, res) => {
       await notificationController.createNotification(
         userId,
         'group_remove',
-        { groupId, removedBy: requesterId, message: 'You have been removed from the group.' }
+        { groupId, type: "event_remove", message: 'You have been removed from the group.' }
       );
     } catch (error) {
       console.error('Bildirim oluşturulurken hata:', error);

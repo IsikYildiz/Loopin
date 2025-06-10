@@ -169,7 +169,8 @@ exports.rejectFriendRequest = async (req, res) => {
 
 // Arkadaşlığı sonlandırma
 exports.removeFriend = async (req, res) => {
-  const { userId, friendId } = req.body;
+  const userId = req.params.userId;
+  const friendId = req.params.friendId;
 
   if (!userId || !friendId) {
     return res.status(400).json({ success: false, message: 'User ID and friend ID are required' });

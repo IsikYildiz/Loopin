@@ -341,13 +341,15 @@ class ChatMessageViewModel @Inject constructor(
                 return@launch
             }
             try {
-                val request = DeleteChatRequest(userId = userId) // DeleteChatRequest modelini kullanıyoruz
-                val response = apiClient.chatApi.deleteChat(chatId, request)
-                if (response.isSuccessful) {
-                    _chatDeletionStatus.value = true
-                } else {
-                    println("Error deleting chat: ${response.code()}")
-                    _chatDeletionStatus.value = false
+                val userId = PreferenceManager.getUserId()
+                val response = userId?.let { apiClient.chatApi.deleteChat(chatId, it) }
+                response?.let {
+                    if (it.isSuccessful) {
+                        _chatDeletionStatus.value = true
+                    } else {
+                        println("Error deleting chat: ${response?.code()}")
+                        _chatDeletionStatus.value = false
+                    }
                 }
             } catch (e: Exception) {
                 println("Exception deleting chat: ${e.message}")

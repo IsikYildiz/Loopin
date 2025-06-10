@@ -21,8 +21,11 @@ interface FriendApi {
     suspend fun rejectFriendRequest(@Body request: FriendRequest): Response<FriendResponse>
 
     // Backend router'da DELETE olarak tanımlanmış ve body bekliyor
-    @HTTP(method = "DELETE", path = "friends/", hasBody = true)
-    suspend fun removeFriend(@Body request: FriendRequest): Response<FriendResponse>
+    @DELETE("friends/{userId}/{friendId}")
+    suspend fun removeFriend(
+        @Path("userId") userId: Int,
+        @Path("friendId") friendId: Int,
+    ): Response<FriendResponse>
 
     // Backend router'da 'friends/user/:userId' olarak tanımlanmış
     @GET("friends/user/{userId}")

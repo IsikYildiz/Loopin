@@ -12,7 +12,7 @@ router.put('/requests/accept', friendController.acceptFriendRequest);
 router.put('/requests/reject', friendController.rejectFriendRequest);
 
 // Arkadaşlığı sonlandırma
-router.delete('/', friendController.removeFriend);
+router.delete('/:userId/:friendId', friendController.removeFriend);
 
 // Kullanıcının arkadaş listesini getirme
 router.get('/user/:userId', friendController.getUserFriends);

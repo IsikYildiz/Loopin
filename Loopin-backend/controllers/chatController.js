@@ -213,7 +213,7 @@ exports.sendMessage = async (req, res) => {
 // Sohbeti silme
 exports.deleteChat = async (req, res) => {
   const chatId = req.params.chatId;
-  const { userId } = req.body;
+  const userId = req.params.userId;
 
   if (!userId) {
     return res.status(400).json({ success: false, message: 'User ID is required' });

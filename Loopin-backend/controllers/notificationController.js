@@ -3,7 +3,7 @@ const pool = require('../db');
 // Dışarıdan kullanılabilir, req, res ile değil direkt parametre ile çağrılır
 exports.createNotification = async (userId, type, content) => {
   // Validasyonlar
-  const validTypes = ['friend_request','friend_request_accepted','friend_request_rejected', 'event_invite','event_invite_accept','event_invite_decline', 'message', 'reminder', 'system'];
+  const validTypes = ['friend_request','friend_request_accepted','friend_request_rejected', 'event_add','event_remove', 'message', 'reminder', 'system'];
   if (!userId || !type || !content) throw new Error('Eksik parametre');
   if (!validTypes.includes(type)) throw new Error('Geçersiz bildirim tipi');
 

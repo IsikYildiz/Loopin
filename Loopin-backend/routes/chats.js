@@ -21,6 +21,6 @@ router.post('/:chatId/messages', chatController.sendMessage);
 router.delete('/:chatId/messages/:messageId', chatController.deleteMessage);
 
 // Sohbeti silme
-router.delete('/:chatId', chatController.deleteChat);
+router.delete('/:userId/:chatId', chatController.deleteChat);
 
 module.exports = router;
