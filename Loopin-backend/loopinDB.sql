@@ -38,7 +38,7 @@ CREATE TABLE `chatmessages` (
 
 LOCK TABLES `chatmessages` WRITE;
 /*!40000 ALTER TABLE `chatmessages` DISABLE KEYS */;
-INSERT INTO `chatmessages` VALUES (1,1),(1,2),(1,3);
+INSERT INTO `chatmessages` VALUES (2,8);
 /*!40000 ALTER TABLE `chatmessages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -58,7 +58,7 @@ CREATE TABLE `chats` (
   KEY `fk_chats_user2` (`user2Id`),
   CONSTRAINT `fk_chats_user1` FOREIGN KEY (`user1Id`) REFERENCES `users` (`userId`) ON DELETE CASCADE,
   CONSTRAINT `fk_chats_user2` FOREIGN KEY (`user2Id`) REFERENCES `users` (`userId`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,7 +67,7 @@ CREATE TABLE `chats` (
 
 LOCK TABLES `chats` WRITE;
 /*!40000 ALTER TABLE `chats` DISABLE KEYS */;
-INSERT INTO `chats` VALUES (1,1,2);
+INSERT INTO `chats` VALUES (2,1,2);
 /*!40000 ALTER TABLE `chats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -96,7 +96,7 @@ CREATE TABLE `eventparticipants` (
 
 LOCK TABLES `eventparticipants` WRITE;
 /*!40000 ALTER TABLE `eventparticipants` DISABLE KEYS */;
-INSERT INTO `eventparticipants` VALUES (1,1,'joined','2025-06-01 19:10:57'),(1,2,'joined','2025-06-08 02:07:37'),(1,4,'joined','2025-06-08 09:44:02'),(2,1,'joined','2025-06-01 19:46:49');
+INSERT INTO `eventparticipants` VALUES (1,1,'joined','2025-06-01 19:10:57'),(1,2,'joined','2025-06-08 02:07:37'),(1,4,'joined','2025-06-08 09:44:02'),(1,6,'joined','2025-06-08 13:47:54'),(2,1,'joined','2025-06-01 19:46:49'),(3,4,'joined','2025-06-08 11:22:49'),(4,6,'joined','2025-06-08 23:49:47'),(5,2,'joined','2025-06-08 23:56:43'),(5,8,'joined','2025-06-08 23:58:09'),(6,8,'joined','2025-06-11 01:37:10'),(6,9,'joined','2025-06-11 01:38:57'),(7,8,'joined','2025-06-11 17:45:51'),(7,10,'joined','2025-06-11 17:48:21');
 /*!40000 ALTER TABLE `eventparticipants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -122,7 +122,7 @@ CREATE TABLE `events` (
   PRIMARY KEY (`eventId`),
   KEY `fk_events_creator` (`creatorId`),
   CONSTRAINT `fk_events_creator` FOREIGN KEY (`creatorId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,7 +131,7 @@ CREATE TABLE `events` (
 
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
-INSERT INTO `events` VALUES (1,1,'Dolma yeme (canım dolma çekti)','Antartika','2025-06-06 12:40:00','2025-06-06 13:00:00','Etkinlik woo','2025-06-01 19:10:57',20,0,NULL),(2,1,'Yaris','Dunya','2025-06-17 23:06:38','2025-06-20 22:06:38','Dunyann etrafinda ilk tur atan kazanir','2025-06-08 02:07:37',5,0,NULL),(4,1,'A',NULL,'2025-06-16 01:43:49','2025-06-23 15:43:49','a','2025-06-08 09:44:02',2,0,NULL);
+INSERT INTO `events` VALUES (1,1,'Dolma yeme (canım dolma çekti)','Antartika','2025-06-06 12:40:00','2025-06-06 13:00:00','Etkinlik woo','2025-06-01 19:10:57',20,0,NULL),(2,1,'Yaris','Dunya','2025-06-17 23:06:38','2025-06-20 22:06:38','Dunyann etrafinda ilk tur atan kazanir','2025-06-08 02:07:37',5,0,NULL),(4,1,'A',NULL,'2025-06-16 01:43:49','2025-06-23 15:43:49','a','2025-06-08 09:44:02',2,0,NULL),(6,1,'C','C','2025-06-16 10:47:37','2025-06-23 17:47:37','a','2025-06-08 13:47:54',3,0,NULL),(8,5,'Yemek','Manisa','2025-06-23 20:57:35','2025-06-30 04:57:35','En hizli kim','2025-06-08 23:58:09',5,0,NULL),(9,6,'Sinema','US','2025-06-18 15:37:28','2025-06-19 15:37:28',NULL,'2025-06-11 01:38:57',3,0,NULL),(10,7,'Yaris','Forked River, NJ 08731, USA','2025-06-17 17:47:17','2025-06-23 05:47:17','....','2025-06-11 17:48:21',10,0,NULL);
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -159,7 +159,7 @@ CREATE TABLE `friendships` (
 
 LOCK TABLES `friendships` WRITE;
 /*!40000 ALTER TABLE `friendships` DISABLE KEYS */;
-INSERT INTO `friendships` VALUES (1,2,'accepted'),(3,1,'pending');
+INSERT INTO `friendships` VALUES (1,2,'accepted'),(1,4,'rejected'),(3,1,'rejected'),(6,5,'pending'),(7,6,'pending');
 /*!40000 ALTER TABLE `friendships` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -188,6 +188,7 @@ CREATE TABLE `groupmembers` (
 
 LOCK TABLES `groupmembers` WRITE;
 /*!40000 ALTER TABLE `groupmembers` DISABLE KEYS */;
+INSERT INTO `groupmembers` VALUES (1,1,'admin','2025-06-08 17:50:56'),(3,1,'admin','2025-06-08 19:22:18'),(3,2,'member','2025-06-08 20:50:49'),(8,1,'admin','2025-07-27 03:58:11'),(9,1,'admin','2025-07-27 03:59:05');
 /*!40000 ALTER TABLE `groupmembers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,6 +215,7 @@ CREATE TABLE `groupmessages` (
 
 LOCK TABLES `groupmessages` WRITE;
 /*!40000 ALTER TABLE `groupmessages` DISABLE KEYS */;
+INSERT INTO `groupmessages` VALUES (1,5);
 /*!40000 ALTER TABLE `groupmessages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -232,7 +234,7 @@ CREATE TABLE `messages` (
   PRIMARY KEY (`messageId`),
   KEY `fk_messages_sender` (`senderId`),
   CONSTRAINT `fk_messages_sender` FOREIGN KEY (`senderId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -241,7 +243,7 @@ CREATE TABLE `messages` (
 
 LOCK TABLES `messages` WRITE;
 /*!40000 ALTER TABLE `messages` DISABLE KEYS */;
-INSERT INTO `messages` VALUES (1,1,'Hello!','2025-06-01 18:27:07'),(2,1,'Hello!','2025-06-01 18:33:39'),(3,1,'Hello!','2025-06-01 18:33:53');
+INSERT INTO `messages` VALUES (5,1,'s','2025-06-08 18:04:46'),(7,6,'Hello','2025-06-11 01:43:36'),(8,1,'Merhaba','2025-06-11 17:49:24');
 /*!40000 ALTER TABLE `messages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -262,7 +264,7 @@ CREATE TABLE `notifications` (
   PRIMARY KEY (`notificationId`),
   KEY `fk_notifications_user` (`userId`),
   CONSTRAINT `fk_notifications_user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -271,7 +273,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
-INSERT INTO `notifications` VALUES (1,2,'message','{\"chatId\": \"1\", \"message\": \"Hello!\", \"senderId\": \"1\"}',0,'2025-06-01 18:33:53'),(2,2,'friend_request','{\"senderId\": \"1\"}',0,'2025-06-01 18:49:35'),(4,2,'event_invite_decline','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully left event\"}',0,'2025-06-01 19:43:09'),(5,2,'event_invite_accept','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully joined event\"}',0,'2025-06-01 19:43:13'),(6,2,'event_invite_decline','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully left event\"}',0,'2025-06-01 19:43:17'),(7,2,'event_invite_accept','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully joined event\"}',0,'2025-06-01 19:46:49'),(9,1,'friend_request','{\"senderId\": 3}',0,'2025-06-08 10:00:03');
+INSERT INTO `notifications` VALUES (1,2,'message','{\"chatId\": \"1\", \"message\": \"Hello!\", \"senderId\": \"1\"}',0,'2025-06-01 18:33:53'),(2,2,'friend_request','{\"senderId\": \"1\"}',0,'2025-06-01 18:49:35'),(4,2,'event_invite_decline','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully left event\"}',0,'2025-06-01 19:43:09'),(5,2,'event_invite_accept','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully joined event\"}',0,'2025-06-01 19:43:13'),(6,2,'event_invite_decline','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully left event\"}',0,'2025-06-01 19:43:17'),(7,2,'event_invite_accept','{\"userId\": 2, \"eventId\": 1, \"message\": \"Succesfully joined event\"}',0,'2025-06-01 19:46:49'),(9,1,'friend_request','{\"senderId\": 3}',0,'2025-06-08 10:00:03'),(10,3,'event_invite_accept','{\"userId\": 3, \"eventId\": 4, \"message\": \"Succesfully joined event\"}',0,'2025-06-08 11:22:47'),(11,3,'event_invite_decline','{\"userId\": 3, \"eventId\": 4, \"message\": \"Succesfully left A\"}',0,'2025-06-08 11:22:49'),(12,3,'event_invite_accept','{\"userId\": 3, \"eventId\": 4, \"message\": \"Succesfully joined event\"}',0,'2025-06-08 11:22:49'),(13,3,'friend_request_rejected','{\"receiverId\": 1}',0,'2025-06-08 17:51:24'),(14,2,'message','{\"chatId\": \"1\", \"message\": \"a\", \"senderId\": 1}',0,'2025-06-08 18:04:39'),(15,2,'message','{\"chatId\": \"1\", \"message\": \"s\", \"senderId\": 1}',0,'2025-06-08 18:23:25'),(16,4,'event_invite_accept','{\"userId\": 4, \"eventId\": 6, \"message\": \"Successfully joined event\"}',0,'2025-06-08 23:49:47'),(17,5,'event_invite_accept','{\"userId\": 5, \"eventId\": 2, \"message\": \"Successfully joined event\"}',0,'2025-06-08 23:56:43'),(18,1,'friend_request','{\"senderId\": 5}',0,'2025-06-08 23:56:50'),(19,6,'event_invite_accept','{\"userId\": 6, \"eventId\": 8, \"message\": \"Successfully joined event\"}',0,'2025-06-11 01:37:10'),(20,5,'friend_request','{\"senderId\": 6}',0,'2025-06-11 01:37:17'),(21,5,'friend_request_accepted','{\"receiverId\": 1}',0,'2025-06-11 02:05:56'),(22,4,'friend_request','{\"senderId\": 1}',0,'2025-06-11 02:14:29'),(23,1,'friend_request_rejected','{\"receiverId\": 4}',0,'2025-06-11 02:15:08'),(24,6,'friend_request','{\"senderId\": 7}',0,'2025-06-11 17:46:34'),(25,2,'message','{\"chatId\": \"2\", \"message\": \"Merhaba\", \"senderId\": 1}',0,'2025-06-11 17:49:24');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -289,10 +291,12 @@ CREATE TABLE `usergroups` (
   `createdBy` int NOT NULL,
   `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `groupImage` varchar(255) DEFAULT NULL,
+  `eventId` int DEFAULT NULL,
   PRIMARY KEY (`groupId`),
+  UNIQUE KEY `eventId` (`eventId`),
   KEY `fk_usergroups_creator` (`createdBy`),
   CONSTRAINT `fk_usergroups_creator` FOREIGN KEY (`createdBy`) REFERENCES `users` (`userId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -301,6 +305,7 @@ CREATE TABLE `usergroups` (
 
 LOCK TABLES `usergroups` WRITE;
 /*!40000 ALTER TABLE `usergroups` DISABLE KEYS */;
+INSERT INTO `usergroups` VALUES (1,'A Grubu','Bu grup, \'A\' etkinliğinin katılımcıları içindir.',1,'2025-06-08 17:50:56',NULL,7),(3,'Sa',NULL,1,'2025-06-08 19:22:17',NULL,NULL),(8,'Test',NULL,1,'2025-07-27 03:58:11',NULL,NULL),(9,'Tatatat Grubu','Bu grup, \'Tatatat\' etkinliğinin katılımcıları içindir.',1,'2025-07-27 03:59:05',NULL,11);
 /*!40000 ALTER TABLE `usergroups` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -327,7 +332,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`userId`),
   UNIQUE KEY `userName` (`userName`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -336,7 +341,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Ali Yılmaz','Ali','ali@example.com','$2b$10$cpTjrwy3b4dOLJIXZEklOOhO5O1SYr9B7FTTnbXIPPQhdYb5AXfM2','Mountain View, United States','Merhaba','2025-05-31',NULL,NULL,'5554',NULL),(2,'test','test','test@example.com','$2b$10$.bdyZqi9.LcZ4uooiRRmmOwbp177e2cefov/Ldd3EGRUqbjzNgo92',NULL,NULL,'2025-06-01',NULL,NULL,NULL,NULL),(3,'test','test2','test2@example.com','$2b$10$owtoxr2icWhWdPMxLicyH.7CLbo4sRuVjCiTqgJub/R6Cnjfk6/OS',NULL,NULL,'2025-06-06',NULL,NULL,NULL,NULL);
+INSERT INTO `users` VALUES (1,'Ali Yılmaz','Ali','ali@example.com','$2b$10$cpTjrwy3b4dOLJIXZEklOOhO5O1SYr9B7FTTnbXIPPQhdYb5AXfM2','Mountain View, United States','Merhaba','2025-05-31',NULL,NULL,'5554',NULL),(2,'test','test','test@example.com','$2b$10$.bdyZqi9.LcZ4uooiRRmmOwbp177e2cefov/Ldd3EGRUqbjzNgo92',NULL,NULL,'2025-06-01',NULL,NULL,NULL,NULL),(3,'test','test2','test2@example.com','$2b$10$owtoxr2icWhWdPMxLicyH.7CLbo4sRuVjCiTqgJub/R6Cnjfk6/OS','Mountain View, United States',NULL,'2025-06-06',NULL,NULL,NULL,NULL),(4,'Ahmet Ylmaz','ahmet','ahmet@exapmle.com','$2b$10$yqmWKmsufD1nnMQwGADYLOdd9ZHGWE/lHPLAf5DXMxQ2zMF2BYTHq','Mountain View, United States',NULL,'2025-06-08',NULL,NULL,NULL,NULL),(5,'AsdF','asd','asd@gmail.com','$2b$10$QK8canmP8CytuSETLzkMpu60opK1p.yZ5z3RdE4HsMY1k6pfGeG6G','Lat: 37.4219983, Lon: -122.084','Turkey','2025-06-08',NULL,NULL,'',NULL),(6,'Ryan','Ryan','a@example.com','$2b$10$g7urqKg5bGEwhqYureaG0.G/dVPPt8lOwXaqtIhr1outzZ/OJTbFu','Mountain View, United States','Merhaba','2025-06-11',NULL,NULL,'',NULL),(7,'Asd','aadssa','as@example.com','$2b$10$Q5xMnq62KpYs7kzg9phVGObitgM.l3rKy85GW2/.v52lvKQakJcqe','Mountain View, United States',NULL,'2025-06-11',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -349,4 +354,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-08 10:09:57
+-- Dump completed on 2025-07-27  4:40:50
